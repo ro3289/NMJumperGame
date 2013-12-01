@@ -8,8 +8,7 @@ import org.andengine.engine.Engine;
 import org.andengine.engine.camera.BoundCamera;
 import org.andengine.entity.scene.Scene;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
-
-import android.app.Activity;
+import org.andengine.ui.activity.BaseGameActivity;
 
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
@@ -21,7 +20,7 @@ public abstract class BaseScene extends Scene
     //---------------------------------------------
     
     protected Engine engine;
-    protected Activity activity;
+    protected BaseGameActivity activity;
     protected ResourcesManager resourcesManager;
     protected VertexBufferObjectManager vbom;
     protected BoundCamera camera;
