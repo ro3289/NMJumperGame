@@ -1,10 +1,15 @@
 package com.jumpergame.Scene;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.LoopEntityModifier;
 import org.andengine.entity.modifier.ScaleModifier;
+import org.andengine.entity.modifier.SequenceEntityModifier;
+import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.scene.IOnAreaTouchListener;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.ITouchArea;
 import org.andengine.entity.scene.Scene;
@@ -16,6 +21,9 @@ import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.extension.physics.box2d.util.Vector2Pool;
+import org.andengine.input.sensor.acceleration.AccelerationData;
+import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.util.SAXUtils;
 import org.andengine.util.adt.align.HorizontalAlign;
@@ -23,7 +31,12 @@ import org.andengine.util.level.EntityLoader;
 import org.andengine.util.level.constants.LevelConstants;
 import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
 import org.andengine.util.level.simple.SimpleLevelLoader;
+import org.andengine.util.math.MathUtils;
 import org.xml.sax.Attributes;
+
+import android.graphics.Color;
+import android.hardware.SensorManager;
+import android.util.SparseArray;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -37,16 +50,27 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.jumpergame.Player;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
+import com.jumpergame.body.Sprite_Body;
+import com.jumpergame.constant.GeneralConstants;
 
-public class GameScene extends BaseScene implements IOnSceneTouchListener
+
+public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
 {
 	private HUD gameHUD;
 	
 	// Score
 	private Text scoreText;
 	private int score = 0;
+	private SparseArray<Text> mScoreTextMap;
+	//energy
+	private ArrayList<Rectangle> mPlayerEnergies;
+	//bullets
+	private final HashMap<Integer, Rectangle> mBullets = new HashMap<Integer, Rectangle>();
 	
-	// Blood bar
+	// jump setting
+    private Vector2 initVector;
+    private Vector2 endVector;
+    private boolean jumpState = false;
 	
 	// Physics 
 	private PhysicsWorld physicsWorld;
@@ -68,12 +92,30 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 	= "acid";
 	
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
+	
     
 	private Player player;
+	private Player dummy;
+	private ArrayList<Player> mPlayers;
+	private int thisID;
+	private int dummyID;
+	private Sprite mArrow;
+	private int mBulletCount = 0;
+	
+	private Vector2 initBodyVector;
+    private Vector2 endBodyVector;
+    
+    private float mGravityX = 0;
+    private float mGravityY = -10.0f;
+	
 
 	private void createHUD()
 	{
+		mScoreTextMap = new SparseArray<Text>();
+		mPlayerEnergies = new ArrayList<Rectangle>();
+		System.out.println("3");
 		gameHUD = new HUD();
+
 		// CREATE SCORE TEXT
 	    /*
 		scoreText = new Text(20, 420, re, "Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
@@ -81,8 +123,38 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	    scoreText.setText("Score: 0");
 	    gameHUD.attachChild(scoreText);
 	    */
-		loadStuff(gameHUD);
+		
 	   
+
+		Text thisScoreText = new Text(20, 420, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
+        Text dummyScoreText = new Text(20, 380, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
+        thisScoreText.setAnchorCenter(0, 0);    
+        thisScoreText.setText("Score: 0");
+        dummyScoreText.setAnchorCenter(0, 0);    
+        dummyScoreText.setText("Opponent Score: 0");
+        gameHUD.attachChild(thisScoreText);
+        gameHUD.attachChild(dummyScoreText);
+        
+        mScoreTextMap.put(thisID, thisScoreText);
+        mScoreTextMap.put(dummyID, dummyScoreText);
+        
+        /**
+         *   energy
+         */
+        
+        System.out.println("3");
+        int i = 0;
+        for (Player p : mPlayers) {
+            Rectangle energy = new Rectangle(ENERGY_BAR_POS_X, ENERGY_BAR_POS_Y-ENERGY_BAR_POS_Y_GAP*i, p.getEnergy(), ENERGY_BAR_HEIGHT, vbom);
+            energy.setAnchorCenterX(0);
+            energy.setColor(Color.RED);
+            mPlayerEnergies.add(energy);
+            gameHUD.attachChild(energy);
+            
+            i++;
+        }
+        loadStuff(gameHUD);
+
 	    camera.setHUD(gameHUD);
 	}
 	
@@ -110,7 +182,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	*/
 	private void createPhysics()
 	{
-	    physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, -10.0f), false); 
+	    physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, -SensorManager.GRAVITY_EARTH), false); 
 	    physicsWorld.setContactListener(contactListener());
 	    registerUpdateHandler(physicsWorld);
 	}
@@ -122,12 +194,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
     @Override
     public void createScene()
     {
-    	createBackground();
-	    createHUD();
+    	createBackground();	    
 	    createPhysics();
 	    loadLevel(1);
+	    createHUD();
 	    
 	    setOnSceneTouchListener(this);
+	    setOnAreaTouchListener(this);
     }
 
     @Override
@@ -154,7 +227,20 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
     
     private void loadLevel(int levelID)
     {
-        final SimpleLevelLoader levelLoader = new SimpleLevelLoader(vbom);
+    	final Rectangle ground = new Rectangle(400, 5, 800, 10, vbom);
+        final Rectangle left = new Rectangle(5, 480/2, 10, 480*10, vbom);
+        final Rectangle right = new Rectangle(800 - 5, 240, 10, 480*10, vbom);
+
+        mPlayers = new ArrayList<Player>();
+        PhysicsFactory.createBoxBody(physicsWorld, ground, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF).setUserData(new Sprite_Body(ground, "Wall"));
+        PhysicsFactory.createBoxBody(physicsWorld, left, BodyType.StaticBody, WALL_FIXTURE_DEF).setUserData(new Sprite_Body(left, "Wall"));
+        PhysicsFactory.createBoxBody(physicsWorld, right, BodyType.StaticBody, WALL_FIXTURE_DEF).setUserData(new Sprite_Body(right, "Wall"));
+        attachChild(ground);
+        attachChild(left);
+        attachChild(right);
+    	System.out.println("4");
+    	
+    	final SimpleLevelLoader levelLoader = new SimpleLevelLoader(vbom);
         
         final FixtureDef FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.01f, 0.5f);
         
@@ -171,7 +257,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
                 return GameScene.this;
             }
         });
-        
+        System.out.println("7");
         levelLoader.registerEntityLoader(new EntityLoader<SimpleLevelEntityLoaderData>(TAG_ENTITY)
         {
             public IEntity onLoadEntity(final String pEntityName, final IEntity pParent, final Attributes pAttributes, final SimpleLevelEntityLoaderData pSimpleLevelEntityLoaderData) throws IOException
@@ -185,20 +271,21 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
                 if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
                 {
                     levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
-                    PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, FIXTURE_DEF).setUserData("platform1");
+                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF);
+                    body.setUserData(new Sprite_Body(levelObject, "Wall"));
                 } 
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2))
                 {
                     levelObject = new Sprite(x, y, resourcesManager.platform2_region, vbom);
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, FIXTURE_DEF);
-                    body.setUserData("platform2");
+                    body.setUserData(new Sprite_Body(levelObject,"platform2"));
                     physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3))
                 {
                     levelObject = new Sprite(x, y, resourcesManager.platform3_region, vbom);
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, FIXTURE_DEF);
-                    body.setUserData("platform3");
+                    body.setUserData(new Sprite_Body(levelObject,"platform3"));
                     physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN))
@@ -222,7 +309,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER))
                 {
-                    player = new Player(x, y, vbom, camera, physicsWorld)
+                    player = new Player(x, y, vbom, camera, physicsWorld,"thisPlayer",1)
                     {
                         @Override
                         public void onDie()
@@ -230,6 +317,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
                             // TODO Latter we will handle it.
                         }
                     };
+                    //registerTouchArea(player);
+                    //camera.setChaseEntity(player);
+                    thisID = mPlayers.size();
+                    mPlayers.add(player);
                     levelObject = player;
                 }
                 else
@@ -242,16 +333,72 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
                 return levelObject;
             }
         });
-
+        System.out.println("5");
         levelLoader.loadLevelFromAsset(activity.getAssets(), "level/" + levelID + ".lvl");
+        System.out.println("6");
+        
+        mArrow = new Sprite(400, 240, resourcesManager.mDirectionTextureRegion, vbom);
+		dummy = new Player(200, 200, vbom, camera, physicsWorld,"dummy",2)
+		{
+
+			@Override
+			public void onDie() {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		};
+		attachChild(dummy);
+		System.out.println("7");
+        dummyID = mPlayers.size();
+        System.out.println("8");
+        mPlayers.add(dummy);
+        System.out.println("9");
     }
 	@Override
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
-		if (pSceneTouchEvent.isActionDown())
-	    {
-
-	    }
-		return false;
+		if(physicsWorld != null ) {
+            if(pSceneTouchEvent.isActionDown()) {   
+                // Record initial position
+                initVector = new Vector2(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+                // Show Direction
+                mArrow.setPosition(player.getX(), player.getY() +40 );
+                attachChild(mArrow);
+            }
+            else if (pSceneTouchEvent.isActionUp()) {
+                if(!jumpState) {
+                    // Eject object
+                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
+                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
+                    if (deltaX < 50.0 && deltaY < 50.0) {
+                        shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+                    } else {
+                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
+                        final float velocityX = endVector.x;
+                        final float velocityY = endVector.y;
+                        final Vector2 velocity = Vector2Pool.obtain(mGravityY * -velocityX *0.01f, mGravityY * -velocityY * 0.01f);
+                        player.returnBody().setLinearVelocity(velocity);
+                        Vector2Pool.recycle(velocity);
+                    // Record initial jump position
+                        initBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
+                        jumpState = true;
+                    }
+                }
+                // Detach arrow 
+                detachChild(mArrow);
+            }
+            else if(pSceneTouchEvent.isActionMove()) {
+                endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
+                final float dX = endVector.x;
+                final float dY = endVector.y;
+                final float angle = (float) Math.atan2( dX, dY);
+                final float rotation = MathUtils.radToDeg(angle);
+                mArrow.setRotation(rotation);
+            }
+            
+            return true;
+        }
+        return false;
 	}
 
 	private ContactListener contactListener()
@@ -261,15 +408,76 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	        public void beginContact(Contact contact)
 	        {
 	            final Fixture x1 = contact.getFixtureA();
-	            final Fixture x2 = contact.getFixtureB();
+                final Fixture x2 = contact.getFixtureB();
+                final Body BodyA = x1.getBody();
+                final Body BodyB = x2.getBody();
+                final float densityA = x1.getDensity();
+                final float densityB = x2.getDensity();
 
-	            if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null)
-	            {
-	                if (x2.getBody().getUserData().equals("player"))
-	                {
-	                   // player.increaseFootContacts();
-	                }
-	            }
+                Sprite_Body userDataA = (Sprite_Body) BodyA.getUserData();
+                Sprite_Body userDataB = (Sprite_Body) BodyB.getUserData();
+                if(userDataA.getName() != null)
+                {
+                	System.out.println("a");
+                System.out.println(userDataA.getName());
+                }
+                if(userDataB.getName() != null)
+                {
+                	System.out.println("b");
+                    System.out.println(userDataB.getName());
+                }
+                if(BodyA.getUserData() != null)
+                {
+                	System.out.println("c");
+                	System.out.println(BodyA.getUserData());
+                }
+                if(BodyB.getUserData() != null)
+                {
+                	System.out.println("d");
+                    System.out.println(BodyB.getUserData());
+                }
+                if(userDataA.getName() == "dummy"||userDataB.getName()=="dummy")
+                {
+                	System.out.println("dummy");
+                }
+                if(userDataA.getName() == "thisPlayer"||userDataB.getName()=="thisPlayer")
+                {
+                	System.out.println("player");
+                }
+                
+                if(userDataA.getName() == "Wall" && userDataB.getName() == "Bullet") {
+                    removeEntity((IEntity)userDataB.getEntity());
+                    System.out.println("wb");
+                } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "Wall") {
+                    removeEntity((IEntity)userDataA.getEntity());
+                    System.out.println("bw");
+                }
+                
+                if(userDataA.getName() == "dummy" && userDataB.getName() == "Bullet") {
+                    removeEntity((IEntity)userDataB.getEntity());
+                    System.out.println("db");
+                    setPlayerEnergy(1, 0, -10);
+                } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "dummy") {
+                    removeEntity((IEntity)userDataA.getEntity());
+                    System.out.println("bd");
+                    setPlayerEnergy(1, 0, -10);
+                }
+                
+                
+                if (x1.getBody() != null && x2.getBody() != null && jumpState) {
+                    if(densityA ==2 || densityB == 2) {
+                        computeScore();
+                        System.out.println("Contact");                        
+                        	
+                        Vector2 bodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
+                        Vector2 forceVector = new Vector2(0,0);
+                        player.returnBody().applyForce(forceVector, bodyVector);
+                        Vector2 velocity = new Vector2(0,0);
+                        player.returnBody().setLinearVelocity(velocity);
+                    //  Vector2Pool.recycle(velocity); // Error message: more items recycled than obtained
+                        jumpState = false;
+                    }
+                }
 	        }
 
 	        public void endContact(Contact contact)
@@ -297,5 +505,139 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	        }
 	    };
 	    return contactListener;
+	}
+	@Override
+	public boolean onAreaTouched(TouchEvent pSceneTouchEvent,
+			ITouchArea pTouchArea, float pTouchAreaLocalX,
+			float pTouchAreaLocalY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	// ===========================================================
+    // Methods
+    // ===========================================================
+	
+	private void shoot(float x, float y) {
+        final Rectangle bullet;
+        final Body body;
+        
+        bullet = new Rectangle(player.getX(), player.getY(), 10, 10, vbom);
+        bullet.setColor(Color.RED);
+        body = PhysicsFactory.createCircleBody(physicsWorld, bullet, BodyType.DynamicBody, BULLET_FIXTURE_DEF);
+        body.setUserData(new Sprite_Body(bullet, "Bullet"));
+        
+        physicsWorld.registerPhysicsConnector(new PhysicsConnector(bullet, body, true, true));
+        
+        bullet.setUserData(body);
+        bullet.setTag(thisID);
+        mBullets.put(mBulletCount++, bullet);
+        attachChild(bullet);
+        
+        body.setLinearVelocity(bulletVelocity(player.getX(), player.getY(), x, y));
+    }
+	
+	private Vector2 bulletVelocity(float initX, float initY, float finX, float finY) {
+        float delX = finX-initX;
+        float delY = finY-initY;
+        float v = (float) java.lang.Math.pow(java.lang.Math.pow(delX, 2) + java.lang.Math.pow(delY, 2), 0.5);
+        return new Vector2(BULLET_VELOCITY * delX / v, BULLET_VELOCITY * delY / v);
+    }
+	
+	private void computeScore() {
+        final float mBodyVelocityY = (player.returnBody().getLinearVelocity().y > 0 )? player.returnBody().getLinearVelocity().y : -player.returnBody().getLinearVelocity().y ;
+        
+        endBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
+        final float jumpHeight = (endBodyVector.y - initBodyVector.y > 0) ? endBodyVector.y - initBodyVector.y:  initBodyVector.y - endBodyVector.y;
+        final float jumpLength = (endBodyVector.x - initBodyVector.x > 0) ? endBodyVector.x - initBodyVector.x:  initBodyVector.x - endBodyVector.x;
+        // Set score base
+        final int scoreMultiplier;
+        if(mBodyVelocityY <= 3) scoreMultiplier = 10;
+        else if(mBodyVelocityY <= 5) scoreMultiplier = 5;
+        else if(mBodyVelocityY <= 8) scoreMultiplier = 3;
+        else if(mBodyVelocityY <= 11) scoreMultiplier = 1;
+        else scoreMultiplier = 0;
+        
+        int newScore = (int) (scoreMultiplier * jumpHeight * jumpLength/10) + player.getScore();
+        player.setScore(newScore);
+        System.out.println("VeclocityY: "+mBodyVelocityY+'\n'+ "Jump height: " + jumpHeight + '\n'+ "Score: " + player.getScore() );
+        
+        updateScore(thisID, newScore);
+    }
+    
+    public void updateScore(final int userID, final int deltaPoints) {
+        final Text score = this.mScoreTextMap.get(userID);
+        score.setText("Score: " + String.valueOf(deltaPoints));
+    }
+    
+    // ===========================================================
+    // Getter & Setter
+    // ===========================================================
+    
+    private void setPlayerEnergy(final int id1, final int id2, final int deltaEnergy) {
+        Player player1 = mPlayers.get(id1);
+        Player player2 = mPlayers.get(id2);
+        
+        int originalEnergy = player1.getEnergy();
+        int newEnergy = originalEnergy + deltaEnergy;
+        if (newEnergy <= 0) {
+            player1.setEnergy(FULL_ENERGY);
+            int player2NewScore = player2.getScore() + 1000;
+            player2.setScore(player2NewScore);
+            updateScore(id2, player2NewScore);
+            
+            mPlayerEnergies.get(id1).registerEntityModifier(new SequenceEntityModifier(
+                new ScaleModifier(1, 
+                    (float) originalEnergy / FULL_ENERGY, 0.001f, 
+                    1, 1
+                ),
+                new ScaleModifier(1, 0.001f, 1, 1, 1)
+            ));
+        }
+        
+        else {
+            player1.setEnergy(newEnergy);
+            mPlayerEnergies.get(id1).registerEntityModifier(new ScaleModifier(1, 
+                (float) originalEnergy / FULL_ENERGY, (float) newEnergy / FULL_ENERGY, 
+                1, 1
+            ));            
+        }
+    }
+    
+    @Override
+    public void onAccelerationChanged(final AccelerationData pAccelerationData) {
+        /*
+        this.mGravityX = pAccelerationData.getX();
+        this.mGravityY = pAccelerationData.getY();
+
+        final Vector2 gravity = Vector2Pool.obtain(this.mGravityX, this.mGravityY);
+        this.mPhysicsWorld.setGravity(gravity);
+        Vector2Pool.recycle(gravity);
+        */
+        final Vector2 gravity = Vector2Pool.obtain(this.mGravityX, this.mGravityY);
+        physicsWorld.setGravity(gravity);
+        Vector2Pool.recycle(gravity);
+    }
+    
+    private void removeEntity(final IEntity pIEntity) {
+        activity.runOnUpdateThread(new Runnable() {
+            @Override
+            public void run() {
+                final PhysicsConnector facePhysicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(pIEntity);
+                if (facePhysicsConnector == null) return;
+
+                physicsWorld.unregisterPhysicsConnector(facePhysicsConnector);
+                physicsWorld.destroyBody(facePhysicsConnector.getBody());
+
+                detachChild(pIEntity);
+                
+                System.gc();
+            }
+        });
+    }
+	@Override
+	public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {
+		// TODO Auto-generated method stub
+		
 	}
 }
