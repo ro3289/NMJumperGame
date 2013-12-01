@@ -94,7 +94,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 			    {
 			        if (pSceneTouchEvent.isActionDown())
 			        {
-			            
+			            Sprite acid_drag = new Sprite(50, 50, resourcesManager.acid_drag_region, vbom);
 			        }
 			        return true;
 			    };
