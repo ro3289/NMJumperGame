@@ -15,8 +15,11 @@ import org.andengine.opengl.texture.atlas.buildable.builder.BlackPawnTextureAtla
 import org.andengine.opengl.texture.atlas.buildable.builder.ITextureAtlasBuilder.TextureAtlasBuilderException;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.ITiledTextureRegion;
+import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.debug.Debug;
+
+import android.graphics.Color;
 
 import com.jumpergame.MainActivity;
 
@@ -69,6 +72,11 @@ public class ResourcesManager {
   	
   	// Font
   	public Font font;
+  	public Font mScoreFont;
+  	
+  	// Direction
+  	public BitmapTextureAtlas mDirectionTextureAtlas;
+    public TextureRegion mDirectionTextureRegion;
 
 
     
@@ -95,10 +103,17 @@ public class ResourcesManager {
     	System.out.println("Loading menu graphics...");
     	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/menu/");
     	menuTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
+<<<<<<< HEAD
     	menu_background_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "menu_background.png");
     	play_region 			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "play.png");
     	options_region 			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "options.png");
     	       
+=======
+    	menu_background_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "menu_background.png");
+    	play_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "play.png");
+    	options_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "options.png");       
+    	
+>>>>>>> merge_origin
     	try 
     	{
     	    this.menuTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
@@ -136,6 +151,7 @@ public class ResourcesManager {
         platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
         
         // Load stuff texture
+
         coin_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
         hpDrink_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "HP.png");
         acid_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
@@ -143,9 +159,14 @@ public class ResourcesManager {
         // Load stuff drag texture
         acid_drag_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
         
+
         // Load player texture
         player_region = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
         
+        mDirectionTextureAtlas = new BitmapTextureAtlas(activity.getTextureManager(), 64, 64, TextureOptions.BILINEAR);
+        mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mDirectionTextureAtlas, activity, "up_arrow.jpg", 0, 0);
+        mDirectionTextureAtlas.load();
+        System.out.println("2");
         try 
         {
             this.gameTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
@@ -159,7 +180,10 @@ public class ResourcesManager {
     
     private void loadGameFonts()
     {
-        
+    	FontFactory.setAssetBasePath("font/");
+    	final ITexture scoreFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 32, true, Color.WHITE);
+        mScoreFont.load();
     }
     
     private void loadGameAudio()
