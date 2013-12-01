@@ -67,10 +67,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_HPDRINK = "hpDrink";
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 	= "acid";
 	
+	// Player
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
-    
 	private Player player;
 
+	// Staff Dragging flag
+	private Sprite dragItem;
+	private boolean DRAG_ITEM = false;
+	
 	private void createHUD()
 	{
 		gameHUD = new HUD();
@@ -81,25 +85,30 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	    scoreText.setText("Score: 0");
 	    gameHUD.attachChild(scoreText);
 	    */
-		loadStuff(gameHUD);
+		loadStuff();
 	   
 	    camera.setHUD(gameHUD);
 	}
 	
-	private void loadStuff(HUD stuffHUD) {
+	private void loadStuff() {
 		Sprite acid = new Sprite(50, 50, resourcesManager.acid_region, vbom)
 		{
 			 @Override
-			    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
-			    {
-			        if (pSceneTouchEvent.isActionDown())
-			        {
-			            Sprite acid_drag = new Sprite(50, 50, resourcesManager.acid_drag_region, vbom);
-			        }
-			        return true;
-			    };
+		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+		    {
+		        if (pSceneTouchEvent.isActionDown() && !DRAG_ITEM)
+		        {
+		        	System.out.println("Item!!!");
+		        	 dragItem = new Sprite(50, 50, resourcesManager.acid_drag_region, vbom);
+		            DRAG_ITEM = true;
+		            gameHUD.attachChild(dragItem);
+		        }
+		        return true;
+		    };
+			    
 		};
-		stuffHUD.attachChild(acid);
+		gameHUD.registerTouchArea(acid);
+		gameHUD.attachChild(acid);
 	}
 	/*
 	private void addToScore(int i)
@@ -229,6 +238,16 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
                         {
                             // TODO Latter we will handle it.
                         }
+                        
+                        @Override 
+                        public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+        			    {
+        			        if (pSceneTouchEvent.isActionUp() && DRAG_ITEM)
+        			        {
+        			        	
+        			        }
+        			        return true;
+        			    };
                     };
                     levelObject = player;
                 }
@@ -247,10 +266,24 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
     }
 	@Override
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
-		if (pSceneTouchEvent.isActionDown())
-	    {
-
-	    }
+		if(pSceneTouchEvent.isActionMove())
+		{
+			if(dragItem != null)
+			{
+				dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+				return true;
+			}
+		}
+		else if(pSceneTouchEvent.isActionUp())
+		{
+			if(dragItem != null)
+			{
+				gameHUD.detachChild(dragItem);
+				DRAG_ITEM = false;
+				dragItem = null;
+				return true;
+			}
+		}
 		return false;
 	}
 
