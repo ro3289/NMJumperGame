@@ -60,6 +60,7 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
 	     body.setFixedRotation(true);
 	     
 	     physicsWorld.registerPhysicsConnector(new PhysicsConnector(this, body, true, false));
+	     
 	     /*{
 	         @Override
 	         public void onUpdate(float pSecondsElapsed)
