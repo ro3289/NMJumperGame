@@ -63,16 +63,6 @@ public abstract class Player extends AnimatedSprite
 	         }
 	     });
 	 }
-	 /* No running in our project
-	 public void setRunning()
-	 {
-	     canRun = true;
-	         
-	     final long[] PLAYER_ANIMATE = new long[] { 100, 100, 100 };
-	         
-	     animate(PLAYER_ANIMATE, 0, 2, true);
-	 }
-	 */
 	 public void jump()
 	 {
 	     body.setLinearVelocity(new Vector2(body.getLinearVelocity().x, 8)); 

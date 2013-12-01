@@ -22,9 +22,8 @@ import com.jumpergame.Manager.SceneManager;
 public class MainActivity extends BaseGameActivity {
 	private ResourcesManager resourcesManager;
 	private BoundCamera mCamera;
-	private final float CAMERA_WIDTH  = 800;
-	private final float CAMERA_HEIGHT = 480;
-	
+	private final float CAMERA_WIDTH  = 480;
+	private final float CAMERA_HEIGHT = 800;
 	
 	@Override
 	public Engine onCreateEngine(EngineOptions pEngineOptions) 
@@ -35,7 +34,7 @@ public class MainActivity extends BaseGameActivity {
 	@Override
 	public EngineOptions onCreateEngineOptions() {
 		this.mCamera = new BoundCamera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
-	    EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(800,480), this.mCamera);
+	    EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.PORTRAIT_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH,CAMERA_HEIGHT), this.mCamera);
 	    engineOptions.getAudioOptions().setNeedsMusic(true).setNeedsSound(true);
 	    engineOptions.setWakeLockOptions(WakeLockOptions.SCREEN_ON);
 	    return engineOptions;

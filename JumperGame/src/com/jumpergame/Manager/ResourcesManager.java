@@ -55,7 +55,10 @@ public class ResourcesManager {
     public ITextureRegion platform1_region;
     public ITextureRegion platform2_region;
     public ITextureRegion platform3_region;
+    
     public ITextureRegion coin_region;
+    public ITextureRegion hpDrink_region;
+    public ITextureRegion acid_region;
     
     // Player TextureRegion
     public ITiledTextureRegion player_region;
@@ -129,7 +132,9 @@ public class ResourcesManager {
         platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
         
         // Load stuff texture
-        coin_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
+        coin_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
+        hpDrink_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "HP.png");
+        acid_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
         
         // Load player texture
         player_region = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);

@@ -10,12 +10,14 @@ import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
+import org.andengine.entity.text.TextOptions;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.util.SAXUtils;
+import org.andengine.util.adt.align.HorizontalAlign;
 import org.andengine.util.level.EntityLoader;
 import org.andengine.util.level.constants.LevelConstants;
 import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
@@ -54,26 +56,40 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	private static final String TAG_ENTITY_ATTRIBUTE_Y = "y";
 	private static final String TAG_ENTITY_ATTRIBUTE_TYPE = "type";
 	    
+	// Staircase
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1 = "platform1";
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2 = "platform2";
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3 = "platform3";
-	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN = "coin";
+	
+	// Stuff
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN 	= "coin";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_HPDRINK = "hpDrink";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 	= "acid";
 	
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
     
+	
+	
 	private Player player;
 
 	private void createHUD()
 	{
 		gameHUD = new HUD();
 		// CREATE SCORE TEXT
-	    
-		/*scoreText = new Text(20, 420, resourcesManager.font, "Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
+	    /*
+		scoreText = new Text(20, 420, re, "Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
 	    scoreText.setAnchorCenter(0, 0);    
 	    scoreText.setText("Score: 0");
-	    gameHUD.attachChild(scoreText);*/
+	    gameHUD.attachChild(scoreText);
+	    */
+		loadStuff(gameHUD);
 	   
 	    camera.setHUD(gameHUD);
+	}
+	
+	private void loadStuff(HUD stuffHUD) {
+		Sprite acid = new Sprite(50, 50, resourcesManager.acid_region, vbom);
+		stuffHUD.attachChild(acid);
 	}
 	/*
 	private void addToScore(int i)
@@ -120,7 +136,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
     public void disposeScene()
     {
     	camera.setHUD(null);
-        camera.setCenter(400, 240);
+        camera.setCenter(240, 400);
 
         // TODO code responsible for disposing scene
         // removing all game scene objects.
@@ -138,9 +154,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
             {
                 final int width = SAXUtils.getIntAttributeOrThrow(pAttributes, LevelConstants.TAG_LEVEL_ATTRIBUTE_WIDTH);
                 final int height = SAXUtils.getIntAttributeOrThrow(pAttributes, LevelConstants.TAG_LEVEL_ATTRIBUTE_HEIGHT);
-                
-                // TODO later we will specify camera BOUNDS and create invisible walls
-                // on the beginning and on the end of the level.
                 
                 camera.setBounds(0, 0, width, height); // here we set camera bounds
                 camera.setBoundsEnabled(true);
