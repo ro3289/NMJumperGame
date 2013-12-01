@@ -91,9 +91,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_HPDRINK = "hpDrink";
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 	= "acid";
 	
+	// Player
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
-	
-    
+
 	private Player player;
 	private Player dummy;
 	private ArrayList<Player> mPlayers;
@@ -109,23 +109,19 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     private float mGravityY = -10.0f;
 	
 
+	// Staff Dragging flag
+	private Sprite dragItem;
+	private boolean DRAG_ITEM = false;
+	
 	private void createHUD()
 	{
 		mScoreTextMap = new SparseArray<Text>();
 		mPlayerEnergies = new ArrayList<Rectangle>();
 		System.out.println("3");
 		gameHUD = new HUD();
-
-		// CREATE SCORE TEXT
-	    /*
-		scoreText = new Text(20, 420, re, "Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
-	    scoreText.setAnchorCenter(0, 0);    
-	    scoreText.setText("Score: 0");
-	    gameHUD.attachChild(scoreText);
-	    */
+		// Load Item
+		loadItem();
 		
-	   
-
 		Text thisScoreText = new Text(20, 420, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
         Text dummyScoreText = new Text(20, 380, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
         thisScoreText.setAnchorCenter(0, 0);    
@@ -153,25 +149,29 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             
             i++;
         }
-        loadStuff(gameHUD);
 
 	    camera.setHUD(gameHUD);
 	}
 	
-	private void loadStuff(HUD stuffHUD) {
+	private void loadItem() {
 		Sprite acid = new Sprite(50, 50, resourcesManager.acid_region, vbom)
 		{
 			 @Override
-			    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
-			    {
-			        if (pSceneTouchEvent.isActionDown())
-			        {
-			            
-			        }
-			        return true;
-			    };
+		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+		    {
+		        if (pSceneTouchEvent.isActionDown() && !DRAG_ITEM)
+		        {
+		        	System.out.println("Item!!!");
+		        	 dragItem = new Sprite(50, 50, resourcesManager.acid_drag_region, vbom);
+		            DRAG_ITEM = true;
+		            gameHUD.attachChild(dragItem);
+		        }
+		        return true;
+		    };
+			    
 		};
-		stuffHUD.attachChild(acid);
+		gameHUD.registerTouchArea(acid);
+		gameHUD.attachChild(acid);
 	}
 	/*
 	private void addToScore(int i)
@@ -316,6 +316,16 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         {
                             // TODO Latter we will handle it.
                         }
+                        
+                        @Override 
+                        public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+        			    {
+        			        if (pSceneTouchEvent.isActionUp() && DRAG_ITEM)
+        			        {
+        			        	
+        			        }
+        			        return true;
+        			    };
                     };
                     //registerTouchArea(player);
                     //camera.setChaseEntity(player);
@@ -357,6 +367,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     }
 	@Override
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
+
 		if(physicsWorld != null ) {
             if(pSceneTouchEvent.isActionDown()) {   
                 // Record initial position
@@ -383,6 +394,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         initBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
                         jumpState = true;
                     }
+                    // Item 
+                    if(dragItem != null)
+        			{
+        				gameHUD.detachChild(dragItem);
+        				DRAG_ITEM = false;
+        				dragItem = null;
+        				return true;
+        			}
                 }
                 // Detach arrow 
                 detachChild(mArrow);
@@ -394,7 +413,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 final float angle = (float) Math.atan2( dX, dY);
                 final float rotation = MathUtils.radToDeg(angle);
                 mArrow.setRotation(rotation);
+                
+                if(dragItem != null)
+    			{
+    				dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+    				return true;
+    			}
             }
+            
             
             return true;
         }
