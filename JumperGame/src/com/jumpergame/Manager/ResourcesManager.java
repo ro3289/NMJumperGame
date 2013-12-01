@@ -56,9 +56,13 @@ public class ResourcesManager {
     public ITextureRegion platform2_region;
     public ITextureRegion platform3_region;
     
+    // Stuff Texture Regions
     public ITextureRegion coin_region;
     public ITextureRegion hpDrink_region;
     public ITextureRegion acid_region;
+    
+    // Stuff Drag Texture Regions
+    public ITextureRegion acid_drag_region;
     
     // Player TextureRegion
     public ITiledTextureRegion player_region;
@@ -91,9 +95,9 @@ public class ResourcesManager {
     	System.out.println("Loading menu graphics...");
     	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/menu/");
     	menuTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
-    	menu_background_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "menu_background.png");
-    	play_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "play.png");
-    	options_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "options.png");
+    	menu_background_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "menu_background.png");
+    	play_region 			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "play.png");
+    	options_region 			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "options.png");
     	       
     	try 
     	{
@@ -135,6 +139,9 @@ public class ResourcesManager {
         coin_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
         hpDrink_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "HP.png");
         acid_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
+        
+        // Load stuff drag texture
+        acid_drag_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
         
         // Load player texture
         player_region = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);

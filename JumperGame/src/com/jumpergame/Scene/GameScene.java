@@ -6,6 +6,7 @@ import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.LoopEntityModifier;
 import org.andengine.entity.modifier.ScaleModifier;
 import org.andengine.entity.scene.IOnSceneTouchListener;
+import org.andengine.entity.scene.ITouchArea;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
@@ -68,8 +69,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
     
-	
-	
 	private Player player;
 
 	private void createHUD()
@@ -88,7 +87,18 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	}
 	
 	private void loadStuff(HUD stuffHUD) {
-		Sprite acid = new Sprite(50, 50, resourcesManager.acid_region, vbom);
+		Sprite acid = new Sprite(50, 50, resourcesManager.acid_region, vbom)
+		{
+			 @Override
+			    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+			    {
+			        if (pSceneTouchEvent.isActionDown())
+			        {
+			            
+			        }
+			        return true;
+			    };
+		};
 		stuffHUD.attachChild(acid);
 	}
 	/*
@@ -243,6 +253,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener
 	    }
 		return false;
 	}
+
 	private ContactListener contactListener()
 	{
 	    ContactListener contactListener = new ContactListener()
