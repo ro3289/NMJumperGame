@@ -12,16 +12,16 @@ public interface GeneralConstants {
     
     public static final int INITIAL_SCORE = 0;
     
-    public static final int ENERGY_BAR_POS_X = 560;
-    public static final int ENERGY_BAR_POS_Y = 380;
-    public static final int ENERGY_BAR_POS_Y_GAP = 25;
-    public static final int ENERGY_BAR_HEIGHT = 10;
+    public static final int ENERGY_BAR_POS_X = 50;
+    public static final int ENERGY_BAR_POS_Y = 650;
+    public static final int ENERGY_BAR_POS_Y_GAP = 40;
+    public static final int ENERGY_BAR_HEIGHT = 15;
     
-    public static final int FULL_ENERGY = 100;
+    public static final int FULL_ENERGY = 150;
     public static final int FULL_MAGAZINE_CAPACITY = 30;
     
-    public static final int BULLET_VELOCITY = 50;
-    public static final int BULLET_POWER = 10;
+    public static final int BULLET_VELOCITY = 30;
+    public static final int BULLET_POWER = 30;
     
     /**
      *   Dialogues

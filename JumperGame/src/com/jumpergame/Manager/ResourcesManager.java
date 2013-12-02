@@ -61,11 +61,12 @@ public class ResourcesManager {
     
     // Stuff Texture Regions
     public ITextureRegion coin_region;
-    public ITextureRegion hpDrink_region;
     public ITextureRegion acid_region;
-    
-    // Stuff Drag Texture Regions
-    public ITextureRegion acid_drag_region;
+    public ITextureRegion glue_region;
+    public ITextureRegion tool_region;
+    public ITextureRegion energy_region;
+    public ITextureRegion invisible_region;
+    public ITextureRegion invincible_region;
     
     // Player TextureRegion
     public ITiledTextureRegion player_region;
@@ -75,8 +76,8 @@ public class ResourcesManager {
   	public Font mScoreFont;
   	
   	// Direction
-  	public BitmapTextureAtlas mDirectionTextureAtlas;
-    public TextureRegion mDirectionTextureRegion;
+  	public BuildableBitmapTextureAtlas mDirectionTextureAtlas;
+    public ITextureRegion mDirectionTextureRegion;
 
 
     
@@ -146,26 +147,26 @@ public class ResourcesManager {
         platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
         
         // Load stuff texture
-
-        coin_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
-        hpDrink_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "HP.png");
-        acid_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
+        coin_region 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
+        acid_region			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
+        glue_region			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "glue.png");
+        tool_region 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "tool.png");
+        energy_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "energy.png");
+        invisible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invisible.png");
+        invincible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invincible.png");
         
-        // Load stuff drag texture
-        acid_drag_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
-        
-
         // Load player texture
-        player_region = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
+        player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
         
-        mDirectionTextureAtlas = new BitmapTextureAtlas(activity.getTextureManager(), 64, 64, TextureOptions.BILINEAR);
-        mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mDirectionTextureAtlas, activity, "up_arrow.jpg", 0, 0);
-        mDirectionTextureAtlas.load();
+//        mDirectionTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 64, 64, TextureOptions.BILINEAR);
+        mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "up_arrow.jpg");
+        
         System.out.println("2");
         try 
         {
             this.gameTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
             this.gameTextureAtlas.load();
+
         } 
         catch (final TextureAtlasBuilderException e)
         {

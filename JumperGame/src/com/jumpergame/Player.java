@@ -29,7 +29,7 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
         userdata=name;
         playerType=type;
         createPhysics(camera, physicsWorld);
-        camera.setChaseEntity(this);
+        // camera.setChaseEntity(this);
         score = INITIAL_SCORE;
         energy = FULL_ENERGY;
         
