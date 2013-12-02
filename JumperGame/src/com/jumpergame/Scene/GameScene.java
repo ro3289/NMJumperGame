@@ -185,12 +185,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private void loadItem() {
 		itemMap = new HashMap<ItemType, StoreItem>();
 		createStoreButton(30, 50, ItemType.BUY_BUTTON, resourcesManager.button_region);
-		createAttackItem(100,  50, ItemType.ACID, 300, resourcesManager.acid_region);
-		createAttackItem(170, 50, ItemType.GLUE, 500, resourcesManager.glue_region);
-		createAttackItem(240, 50, ItemType.TOOL, 800, resourcesManager.tool_region);
-		createStoreItem(310, 50, ItemType.ENERGY_DRINK, 200, resourcesManager.energy_region);
-		createStoreItem(380, 50, ItemType.INVISIBLE_DRINK, 500, resourcesManager.invisible_region);
-		createStoreItem(450, 50, ItemType.INVINCIBLE_DRINK, 1000, resourcesManager.invincible_region);
+		createAttackItem(90,  50, ItemType.ACID, 300, resourcesManager.acid_region);
+		createAttackItem(160, 50, ItemType.GLUE, 500, resourcesManager.glue_region);
+		createAttackItem(230, 50, ItemType.TOOL, 800, resourcesManager.tool_region);
+		createStoreItem(300, 50, ItemType.ENERGY_DRINK, 200, resourcesManager.energy_region);
+		createStoreItem(370, 50, ItemType.INVISIBLE_DRINK, 500, resourcesManager.invisible_region);
+		createStoreItem(440, 50, ItemType.INVINCIBLE_DRINK, 1000, resourcesManager.invincible_region);
 	}
 	private void createAttackItem(final float x, final float y, final ItemType type, final int price, final ITextureRegion itemTextureRegion)
 	{	
@@ -203,8 +203,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        {	
 		        	if(buyItem){
 	        			this.buyStoreItem();
-		        	buyItem = false;
-		        	// scale down modifier of button
 		        	}
 		        	else
 		        	{
