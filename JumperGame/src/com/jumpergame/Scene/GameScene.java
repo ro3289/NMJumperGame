@@ -438,7 +438,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         
                     };
                     // registerTouchArea(player);
-                    // camera.setChaseEntity(player);
+                    camera.setChaseEntity(player);
                     thisID = mPlayers.size();
                     mPlayers.add(player);
                     levelObject = player;
