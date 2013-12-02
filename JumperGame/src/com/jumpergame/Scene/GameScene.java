@@ -48,6 +48,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.jumpergame.AttackItem;
 import com.jumpergame.Item;
 import com.jumpergame.Player;
 import com.jumpergame.StoreItem;
@@ -116,7 +117,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	
 
 	// Item
-	private Item dragItem;
+	private AttackItem dragItem;
 
 	public enum ItemType
 	{
@@ -188,16 +189,19 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	private void createAttackItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
 	{	
-		Item item= new Item(x, y, type, itemTextureRegion, vbom)
+		final GameScene gc = this;
+		AttackItem item= new AttackItem(this, x, y, type, itemTextureRegion, vbom)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
 		    {
 		        if (pSceneTouchEvent.isActionDown() && dragItem == null)
-		        {
-		        	dragItem = new Item(x, y, type, itemTextureRegion, vbom);
-		         //   DRAG_ITEM = true;
-		            gameHUD.attachChild(dragItem);
+		        {	
+		        	if(getItemAmount() > 0)
+		        	{
+			        	dragItem = new AttackItem(gc, x, y, type, itemTextureRegion, vbom);
+			            gameHUD.attachChild(dragItem);
+		        	}
 		        }
 		        return true;
 		    };
@@ -221,7 +225,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 			        	// scale down modifier of button
 		        	}
 		        	else{
-		        		if (this.getItemAmount() != 0)
+		        		if (this.getItemAmount() >= 0)
 		        		{
 	        				this.useStoreItem();
 		        		}
@@ -433,17 +437,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        if (pSceneTouchEvent.isActionUp() && dragItem != null)
 		        {
 		        	System.out.println("Dummy attacked!");
-		        	switch (dragItem.getType())
-		        	{	
-		        		case ACID:
-		        			setPlayerEnergy(1, 0, -100);
-		        			break;
-		        		case GLUE:
-		        			break;
-		        		default:
-		        			break;
-		        	}
+		        	dragItem.useAttackItem();
 		        	gameHUD.detachChild(dragItem);
+		        	dragItem.dispose();
 		        	dragItem = null;
 		        //	DRAG_ITEM = false;
 		        }

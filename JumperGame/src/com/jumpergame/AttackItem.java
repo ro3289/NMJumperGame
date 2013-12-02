@@ -10,26 +10,17 @@ import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Scene.GameScene;
 import com.jumpergame.Scene.GameScene.ItemType;
 
-public class StoreItem extends Item{
-	
-	private int  itemPrice;
-	private Text itemPriceText;
-	
-	public StoreItem(GameScene gc, float pX, float pY, ItemType type, int price,
+public class AttackItem extends Item{
+
+	public AttackItem(GameScene gc, float pX, float pY, ItemType type,
 			ITextureRegion pTextureRegion,
 			VertexBufferObjectManager pVertexBufferObjectManager) {
 		super(pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
-		
+
 		gameScene = gc;
 		resourcesManager = ResourcesManager.getInstance();
 		
 		setType(type);
-		
-		itemPrice = price;
-		itemPriceText = new Text(pX, pY - 50 , resourcesManager.mPriceFont, String.valueOf(itemPrice), 10 ,new TextOptions(HorizontalAlign.LEFT), resourcesManager.vbom);
-		itemPriceText.setAnchorCenter(0, 0);
-		gameScene.gameHUD.attachChild(itemPriceText);
-		
 		itemAmount = 0;
 		itemAmountText = new Text(pX, pY + 30 , resourcesManager.mItemAmountFont, "0", 10 ,new TextOptions(HorizontalAlign.LEFT), resourcesManager.vbom);
 		itemAmountText.setAnchorCenter(0, 0);
@@ -38,29 +29,21 @@ public class StoreItem extends Item{
 	
 	// Method
 	
-	public void buyStoreItem()
-    {
-    	
-    	boolean buySuccess = gameScene.minusPlayerMoney(itemPrice);
-    	if(buySuccess){
-    		plusStoreItem();
-    	}
-    }
     public int getItemAmount()
     {
     	return itemAmount;
     }
-    private void plusStoreItem()
+    private void plusAttackItem()
     {
     	itemAmount++;
     	itemAmountText.setText(String.valueOf(itemAmount));
     }	
-    private void minusStoreItem()
+    private void minusAttackItem()
     {
     	itemAmount = (itemAmount == 0)? 0 : itemAmount -1;
     	itemAmountText.setText(String.valueOf(itemAmount));
     }
-    public void useStoreItem()
+    public void useAttackItem()
     {
     	switch (itemType)
     	{
@@ -74,8 +57,7 @@ public class StoreItem extends Item{
 		default:
 			break;
     	}
-    	minusStoreItem();
+    	minusAttackItem();
     }
-    
 
 }
