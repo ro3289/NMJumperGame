@@ -75,6 +75,8 @@ public class ResourcesManager {
   	// Font
   	public Font font;
   	public Font mScoreFont;
+  	public Font mPriceFont;
+  	public Font mItemAmountFont;
   	
   	// Direction
   	public BuildableBitmapTextureAtlas mDirectionTextureAtlas;
@@ -182,6 +184,13 @@ public class ResourcesManager {
     	final ITexture scoreFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
         mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 27, true, Color.WHITE);
         mScoreFont.load();
+        final ITexture priceFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+        mPriceFont = FontFactory.createFromAsset(activity.getFontManager(), priceFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
+        mPriceFont.load();
+        final ITexture itemAmountFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+        mItemAmountFont = FontFactory.createFromAsset(activity.getFontManager(), itemAmountFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
+        mItemAmountFont.load();
+        
     }
     
     private void loadGameAudio()

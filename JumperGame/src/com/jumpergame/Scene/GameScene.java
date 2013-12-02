@@ -59,7 +59,7 @@ import com.jumpergame.constant.GeneralConstants;
 
 public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
 {
-	private HUD gameHUD;
+	public HUD gameHUD;
 	
 	// Score
 	private Text scoreText;
@@ -117,9 +117,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 
 	// Item
 	private Item dragItem;
-	private int[]		 				itemAmount;
-	private HashMap<ItemType, Integer>  itemIndex;
-	
+
 	public enum ItemType
 	{
 		// Attack items
@@ -145,8 +143,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		loadItem();
 		
 		// Set Score 
-		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
-        Text dummyScoreText = new Text(20, 680, resourcesManager.mScoreFont, "Player2 Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
+		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+        Text dummyScoreText = new Text(20, 680, resourcesManager.mScoreFont, "Player2 Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
         thisScoreText.setAnchorCenter(0, 0);    
         dummyScoreText.setAnchorCenter(0, 0);    
         gameHUD.attachChild(thisScoreText);
@@ -180,21 +178,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	// @Bosh
 	// Item System
 	private void loadItem() {
-		createAttackItem(30,  30, ItemType.ACID, resourcesManager.acid_region);
-		createAttackItem(100, 30, ItemType.GLUE, resourcesManager.glue_region);
-		createAttackItem(170, 30, ItemType.TOOL, resourcesManager.tool_region);
-		createStoreItem(240, 30, ItemType.ENERGY_DRINK, resourcesManager.energy_region);
-		createStoreItem(310, 30, ItemType.INVISIBLE_DRINK, resourcesManager.invisible_region);
-		createStoreItem(380, 30, ItemType.INVINCIBLE_DRINK, resourcesManager.invincible_region);
-		createStoreButton(450, 30, ItemType.BUY_BUTTON, resourcesManager.button_region);
-		itemIndex  = new HashMap<ItemType, Integer>();
-		itemIndex.put(ItemType.ACID, 0);
-		itemIndex.put(ItemType.GLUE, 1);
-		itemIndex.put(ItemType.TOOL, 2);
-		itemIndex.put(ItemType.ENERGY_DRINK, 3);
-		itemIndex.put(ItemType.INVISIBLE_DRINK, 4);
-		itemIndex.put(ItemType.INVINCIBLE_DRINK, 5);
-		itemAmount = new int[]{0, 0, 0, 0, 0, 0};
+		createAttackItem(30,  50, ItemType.ACID, resourcesManager.acid_region);
+		createAttackItem(100, 50, ItemType.GLUE, resourcesManager.glue_region);
+		createAttackItem(170, 50, ItemType.TOOL, resourcesManager.tool_region);
+		createStoreItem(240, 50, ItemType.ENERGY_DRINK, 200, resourcesManager.energy_region);
+		createStoreItem(310, 50, ItemType.INVISIBLE_DRINK, 500, resourcesManager.invisible_region);
+		createStoreItem(380, 50, ItemType.INVINCIBLE_DRINK, 1000, resourcesManager.invincible_region);
+		createStoreButton(450, 50, ItemType.BUY_BUTTON, resourcesManager.button_region);
 	}
 	private void createAttackItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
 	{	
@@ -216,9 +206,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		gameHUD.registerTouchArea(item);
 		gameHUD.attachChild(item);
 	}
-	private void createStoreItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
+	private void createStoreItem(final float x, final float y, final ItemType type,final int p, final ITextureRegion itemTextureRegion)
 	{	
-		StoreItem item= new StoreItem(x, y, type, itemTextureRegion, vbom)
+		StoreItem item= new StoreItem(this, x, y, type, p, itemTextureRegion, vbom)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -226,14 +216,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        if (pSceneTouchEvent.isActionDown())
 		        {
 		        	if(buyItem){
-		        			buyStoreItem(type);
+		        			this.buyStoreItem();
 			        	buyItem = false;
 			        	// scale down modifier of button
 		        	}
 		        	else{
-		        		if (getItemAmount(type) != 0)
+		        		if (this.getItemAmount() != 0)
 		        		{
-	        				useStoreItem(type);
+	        				this.useStoreItem();
 		        		}
 		        	}
 		        }
@@ -316,7 +306,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     
     private void loadLevel(int levelID)
     {
-    	final Rectangle ground = new Rectangle(240, 30, 480, 60, vbom);
+    	final Rectangle ground = new Rectangle(240, 50, 480, 100, vbom);
         final Rectangle left = new Rectangle(5, 480*5, 10, 480*10, vbom);
         final Rectangle right = new Rectangle(480 - 5, 450*5, 10, 480*10, vbom);
 
@@ -389,7 +379,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                             if (player.collidesWith(this))
                             {
                             	// Add money here
-                            	plusPlayerMoney(100);
+                            	plusPlayerMoney(500);
                                 this.setVisible(false);
                                 this.setIgnoreUpdate(true);
                             }
@@ -717,7 +707,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     // Getter & Setter
     // ===========================================================
     
-    private void setPlayerEnergy(final int id1, final int id2, final int deltaEnergy) {
+    public void setPlayerEnergy(final int id1, final int id2, final int deltaEnergy) {
         Player player1 = mPlayers.get(id1);
         Player player2 = mPlayers.get(id2);
         
@@ -754,7 +744,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     	player1.setMoney(newPlayerMoney);
     	moneyText.setText("Money: "+ String.valueOf(newPlayerMoney));
     }
-    private boolean minusPlayerMoney(final int deltaMoney)
+    public boolean minusPlayerMoney(final int deltaMoney)
     {
     	boolean buySuccess;
     	Player player1 = mPlayers.get(0);
@@ -775,60 +765,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     	moneyText.setText("Money: "+ String.valueOf(newPlayerMoney));
     	return buySuccess;
     }
-    private void buyStoreItem(ItemType type)
-    {
-    	int price;
-    	switch (type)
-    	{
-    	case ENERGY_DRINK:
-    		price = 200;
-    		break;
-    	case INVISIBLE_DRINK:
-    		price = 500;
-    		break;
-    	case INVINCIBLE_DRINK:
-    		price = 800;
-    		break;
-		default:
-			price = 0;
-			break;
-    	}
-    	boolean buySuccess = minusPlayerMoney(price);
-    	if(buySuccess){
-    		plusStoreItem(type);
-    	}
-    }
-    private int getItemAmount(ItemType type)
-    {
-    	int index = itemIndex.get(type);
-    	return itemAmount[index];
-    }
-    private void plusStoreItem(ItemType type)
-    {
-    	int index = getItemAmount(type);
-    	itemAmount[index] ++;
-    }	
-    private void minusStoreItem(ItemType type)
-    {
-    	int index = itemIndex.get(type);
-    	itemAmount[index] =  (itemAmount[index] == 0)? 0 :itemAmount[index]--;
-    }
-    private void useStoreItem(ItemType type)
-    {
-    	switch (type)
-    	{
-    	case ENERGY_DRINK:
-    		setPlayerEnergy(1, 0, +50);
-    		break;
-    	case INVISIBLE_DRINK:
-    		break;
-    	case INVINCIBLE_DRINK:
-    		break;
-		default:
-			break;
-    	}
-    	minusStoreItem(type);
-    }
+   
     @Override
     public void onAccelerationChanged(final AccelerationData pAccelerationData) {
         /*
