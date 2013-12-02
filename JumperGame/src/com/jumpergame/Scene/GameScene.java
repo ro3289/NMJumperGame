@@ -50,6 +50,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.jumpergame.Item;
 import com.jumpergame.Player;
+import com.jumpergame.StoreItem;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
 import com.jumpergame.body.Sprite_Body;
@@ -64,6 +65,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private Text scoreText;
 	private int score = 0;
 	private SparseArray<Text> mScoreTextMap;
+	// Money
+	private Text moneyText;
+	private boolean buyItem = false;
 	//energy
 	private ArrayList<Rectangle> mPlayerEnergies;
 	//bullets
@@ -72,7 +76,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	// jump setting
     private Vector2 initVector;
     private Vector2 endVector;
-    private boolean jumpState 	 = false;
+    private boolean jumpState = false;
 	
 	// Physics 
 	private PhysicsWorld physicsWorld;
@@ -111,9 +115,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     private float mGravityY = -10.0f;
 	
 
-	// Staff Dragging flag
+	// Item
 	private Item dragItem;
-	private HashMap<ItemType, Integer> itemAmount;
+	private int[]		 				itemAmount;
+	private HashMap<ItemType, Integer>  itemIndex;
 	
 	public enum ItemType
 	{
@@ -124,7 +129,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		// Self items
 		ENERGY_DRINK,
 		INVISIBLE_DRINK,
-		INVINCIBLE_DRINK;
+		INVINCIBLE_DRINK,
+		BUY_BUTTON;
 	}
 	
 	// Create Item HUD
@@ -139,17 +145,19 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		loadItem();
 		
 		// Set Score 
-		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
-        Text dummyScoreText = new Text(20, 680, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
+		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
+        Text dummyScoreText = new Text(20, 680, resourcesManager.mScoreFont, "Player2 Score: 0", new TextOptions(HorizontalAlign.LEFT), vbom);
         thisScoreText.setAnchorCenter(0, 0);    
-        thisScoreText.setText("Score: 0");
         dummyScoreText.setAnchorCenter(0, 0);    
-        dummyScoreText.setText("Opponent Score: 0");
         gameHUD.attachChild(thisScoreText);
         gameHUD.attachChild(dummyScoreText);
         
         mScoreTextMap.put(thisID, thisScoreText);
         mScoreTextMap.put(dummyID, dummyScoreText);
+        // Set Money
+        moneyText = new Text(250, 720, resourcesManager.mScoreFont, "Money: 0", 20, new TextOptions(HorizontalAlign.RIGHT), vbom);
+        moneyText.setAnchorCenter(0, 0);
+        gameHUD.attachChild(moneyText);
         
         /**
          *   energy
@@ -178,6 +186,15 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		createStoreItem(240, 30, ItemType.ENERGY_DRINK, resourcesManager.energy_region);
 		createStoreItem(310, 30, ItemType.INVISIBLE_DRINK, resourcesManager.invisible_region);
 		createStoreItem(380, 30, ItemType.INVINCIBLE_DRINK, resourcesManager.invincible_region);
+		createStoreButton(450, 30, ItemType.BUY_BUTTON, resourcesManager.button_region);
+		itemIndex  = new HashMap<ItemType, Integer>();
+		itemIndex.put(ItemType.ACID, 0);
+		itemIndex.put(ItemType.GLUE, 1);
+		itemIndex.put(ItemType.TOOL, 2);
+		itemIndex.put(ItemType.ENERGY_DRINK, 3);
+		itemIndex.put(ItemType.INVISIBLE_DRINK, 4);
+		itemIndex.put(ItemType.INVINCIBLE_DRINK, 5);
+		itemAmount = new int[]{0, 0, 0, 0, 0, 0};
 	}
 	private void createAttackItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
 	{	
@@ -201,22 +218,23 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	private void createStoreItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
 	{	
-		Item item= new Item(x, y, type, itemTextureRegion, vbom)
+		StoreItem item= new StoreItem(x, y, type, itemTextureRegion, vbom)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
 		    {
 		        if (pSceneTouchEvent.isActionDown())
 		        {
-		        	switch (type)
-		        	{
-		        	case ENERGY_DRINK:
-		        		setPlayerEnergy(1, 0, +50);
-		        		break;
-		        	case INVISIBLE_DRINK:
-		        		break;
-		        	case INVINCIBLE_DRINK:
-		        		break;
+		        	if(buyItem){
+		        			buyStoreItem(type);
+			        	buyItem = false;
+			        	// scale down modifier of button
+		        	}
+		        	else{
+		        		if (getItemAmount(type) != 0)
+		        		{
+	        				useStoreItem(type);
+		        		}
 		        	}
 		        }
 		        return true;
@@ -226,7 +244,31 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		gameHUD.registerTouchArea(item);
 		gameHUD.attachChild(item);
 	}
-	
+	private void createStoreButton(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
+	{	
+		Item item= new Item(x, y, type, itemTextureRegion, vbom)
+		{
+			 @Override
+		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+		    {
+		        if (pSceneTouchEvent.isActionDown())
+		        {
+		        	if(buyItem){
+			        	buyItem = false;
+			        	// scale down modifier of button
+		        	}
+		        	else{
+		        		buyItem = true;
+		        		// scale up modifier of button
+		        	}
+		        }
+		        return true;
+		    };
+			    
+		};
+		gameHUD.registerTouchArea(item);
+		gameHUD.attachChild(item);
+	}
 	private void createPhysics()
 	{
 	    physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, -SensorManager.GRAVITY_EARTH), false); 
@@ -347,7 +389,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                             if (player.collidesWith(this))
                             {
                             	// Add money here
-                               // addToScore(10);
+                            	plusPlayerMoney(100);
                                 this.setVisible(false);
                                 this.setIgnoreUpdate(true);
                             }
@@ -483,7 +525,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 return true;
             }
             else if(pSceneTouchEvent.isActionMove()) {
-            	if(dragItem == null)
+            	if(dragItem == null) // Problem here when store items used!!!!!
             	{
 	                endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
 	                final float dX = endVector.x;
@@ -704,7 +746,89 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             ));            
         }
     }
-    
+    private void plusPlayerMoney(final int deltaMoney)
+    {
+    	Player player1 = mPlayers.get(0);
+    	int original = player1.getMoney();
+    	int newPlayerMoney = original + deltaMoney;
+    	player1.setMoney(newPlayerMoney);
+    	moneyText.setText("Money: "+ String.valueOf(newPlayerMoney));
+    }
+    private boolean minusPlayerMoney(final int deltaMoney)
+    {
+    	boolean buySuccess;
+    	Player player1 = mPlayers.get(0);
+    	int original = player1.getMoney();
+    	int result = original - deltaMoney;
+    	int newPlayerMoney;
+    	if(result >= 0)
+    	{
+    		newPlayerMoney = result;
+    		buySuccess = true;
+    	}
+    	else
+    	{
+    		newPlayerMoney = original;
+    		buySuccess = false;
+    	}
+    	player1.setMoney(newPlayerMoney);
+    	moneyText.setText("Money: "+ String.valueOf(newPlayerMoney));
+    	return buySuccess;
+    }
+    private void buyStoreItem(ItemType type)
+    {
+    	int price;
+    	switch (type)
+    	{
+    	case ENERGY_DRINK:
+    		price = 200;
+    		break;
+    	case INVISIBLE_DRINK:
+    		price = 500;
+    		break;
+    	case INVINCIBLE_DRINK:
+    		price = 800;
+    		break;
+		default:
+			price = 0;
+			break;
+    	}
+    	boolean buySuccess = minusPlayerMoney(price);
+    	if(buySuccess){
+    		plusStoreItem(type);
+    	}
+    }
+    private int getItemAmount(ItemType type)
+    {
+    	int index = itemIndex.get(type);
+    	return itemAmount[index];
+    }
+    private void plusStoreItem(ItemType type)
+    {
+    	int index = getItemAmount(type);
+    	itemAmount[index] ++;
+    }	
+    private void minusStoreItem(ItemType type)
+    {
+    	int index = itemIndex.get(type);
+    	itemAmount[index] =  (itemAmount[index] == 0)? 0 :itemAmount[index]--;
+    }
+    private void useStoreItem(ItemType type)
+    {
+    	switch (type)
+    	{
+    	case ENERGY_DRINK:
+    		setPlayerEnergy(1, 0, +50);
+    		break;
+    	case INVISIBLE_DRINK:
+    		break;
+    	case INVINCIBLE_DRINK:
+    		break;
+		default:
+			break;
+    	}
+    	minusStoreItem(type);
+    }
     @Override
     public void onAccelerationChanged(final AccelerationData pAccelerationData) {
         /*

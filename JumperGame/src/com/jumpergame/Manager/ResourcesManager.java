@@ -67,6 +67,7 @@ public class ResourcesManager {
     public ITextureRegion energy_region;
     public ITextureRegion invisible_region;
     public ITextureRegion invincible_region;
+    public ITextureRegion button_region;
     
     // Player TextureRegion
     public ITiledTextureRegion player_region;
@@ -154,6 +155,7 @@ public class ResourcesManager {
         energy_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "energy.png");
         invisible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invisible.png");
         invincible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invincible.png");
+        button_region 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "buy.png");
         
         // Load player texture
         player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
@@ -178,7 +180,7 @@ public class ResourcesManager {
     {
     	FontFactory.setAssetBasePath("font/");
     	final ITexture scoreFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
-        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 32, true, Color.WHITE);
+        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 27, true, Color.WHITE);
         mScoreFont.load();
     }
     

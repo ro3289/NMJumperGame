@@ -47,7 +47,8 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
 	 private boolean canRun = false;
 	 
 	 private int energy;
-	 private int score;
+	 private int score = 0;
+	 private int money = 0;
 	 private int playerType;
 	 
 	 private void createPhysics(final Camera camera, PhysicsWorld physicsWorld)
@@ -107,6 +108,14 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
 	    
 	 public void setScore(int s) {
 	     score = s;
+	 }
+	 
+	 public int getMoney() {
+	     return money;
+	 }
+	    
+	 public void setMoney(int m) {
+	     money = m;
 	 }
 	 
 	 public Body returnBody()
