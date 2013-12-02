@@ -2,6 +2,8 @@ package com.jumpergame;
 
 import org.andengine.engine.camera.BoundCamera;
 import org.andengine.engine.camera.Camera;
+import org.andengine.engine.handler.timer.ITimerCallback;
+import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.entity.modifier.ScaleModifier;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
@@ -41,13 +43,16 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
 	     
      private String userdata;
 	 private Body body;
+	 private int  velocityFactor = 8;
+	 private boolean invincibleState = false;
 	 
 	 public abstract void onDie();
 
 	 private boolean canRun = false;
 	 
 	 private int energy;
-	 private int score;
+	 private int score = 0;
+	 private int money = 0;
 	 private int playerType;
 	 
 	 private void createPhysics(final Camera camera, PhysicsWorld physicsWorld)
@@ -109,9 +114,62 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
 	     score = s;
 	 }
 	 
+	 public int getMoney() {
+	     return money;
+	 }
+	    
+	 public void setMoney(int m) {
+	     money = m;
+	 }
+	 
 	 public Body returnBody()
 	 {
 		 return body;
+	 }
+	 
+	 public int getVelocityFactor()
+	 {
+		 return velocityFactor;
+	 }
+	 
+	 public void slowDownEffect()
+	 {
+		 velocityFactor = 1;
+		 registerUpdateHandler(new TimerHandler(3f, new ITimerCallback() 
+	    {
+			
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                unregisterUpdateHandler(pTimerHandler);
+                velocityFactor = 8;
+            }
+	    }));
+	 }
+	 public void invisibleEffect()
+	 {	
+		 setAlpha(0.3f);
+		 registerUpdateHandler(new TimerHandler(4f, new ITimerCallback() 
+	    {
+			
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                unregisterUpdateHandler(pTimerHandler);
+                setAlpha(1f);
+            }
+	    }));
+	 }
+	 public void invincibleEffect()
+	 {	// Not corrected yet
+		invincibleState = true;
+		 registerUpdateHandler(new TimerHandler(4f, new ITimerCallback() 
+	    {
+			
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                unregisterUpdateHandler(pTimerHandler);
+                invincibleState = false;
+            }
+	    }));
 	 }
 
 }

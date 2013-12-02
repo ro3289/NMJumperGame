@@ -67,6 +67,7 @@ public class ResourcesManager {
     public ITextureRegion energy_region;
     public ITextureRegion invisible_region;
     public ITextureRegion invincible_region;
+    public ITextureRegion button_region;
     
     // Player TextureRegion
     public ITiledTextureRegion player_region;
@@ -74,6 +75,8 @@ public class ResourcesManager {
   	// Font
   	public Font font;
   	public Font mScoreFont;
+  	public Font mPriceFont;
+  	public Font mItemAmountFont;
   	
   	// Direction
   	public BuildableBitmapTextureAtlas mDirectionTextureAtlas;
@@ -154,6 +157,7 @@ public class ResourcesManager {
         energy_region		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "energy.png");
         invisible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invisible.png");
         invincible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invincible.png");
+        button_region 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "buy.png");
         
         // Load player texture
         player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
@@ -178,8 +182,15 @@ public class ResourcesManager {
     {
     	FontFactory.setAssetBasePath("font/");
     	final ITexture scoreFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
-        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 32, true, Color.WHITE);
+        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 27, true, Color.WHITE);
         mScoreFont.load();
+        final ITexture priceFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+        mPriceFont = FontFactory.createFromAsset(activity.getFontManager(), priceFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
+        mPriceFont.load();
+        final ITexture itemAmountFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+        mItemAmountFont = FontFactory.createFromAsset(activity.getFontManager(), itemAmountFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
+        mItemAmountFont.load();
+        
     }
     
     private void loadGameAudio()
