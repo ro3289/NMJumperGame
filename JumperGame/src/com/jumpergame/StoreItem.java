@@ -12,16 +12,17 @@ import com.jumpergame.Scene.GameScene.ItemType;
 
 public class StoreItem extends Item{
 	
-	private int  itemPrice;
+	protected int  itemPrice;
 	private Text itemPriceText;
 	
 	public StoreItem(GameScene gc, float pX, float pY, ItemType type, int price,
 			ITextureRegion pTextureRegion,
 			VertexBufferObjectManager pVertexBufferObjectManager) {
-		super(pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
+		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
 		
-		gameScene = gc;
-		resourcesManager = ResourcesManager.getInstance();
+		gameScene 			= gc;
+		resourcesManager    = ResourcesManager.getInstance();
+		
 		
 		setType(type);
 		
@@ -43,19 +44,19 @@ public class StoreItem extends Item{
     	
     	boolean buySuccess = gameScene.minusPlayerMoney(itemPrice);
     	if(buySuccess){
-    		plusStoreItem();
+    		plusItem();
     	}
     }
     public int getItemAmount()
     {
     	return itemAmount;
     }
-    private void plusStoreItem()
+    public void plusItem()
     {
     	itemAmount++;
     	itemAmountText.setText(String.valueOf(itemAmount));
     }	
-    private void minusStoreItem()
+    private void minusItem()
     {
     	itemAmount = (itemAmount == 0)? 0 : itemAmount -1;
     	itemAmountText.setText(String.valueOf(itemAmount));
@@ -64,17 +65,28 @@ public class StoreItem extends Item{
     {
     	switch (itemType)
     	{
+    	case ACID:
+    		gameScene.setPlayerEnergy(1,0,-100);
+    		break;
+    	case GLUE:
+    		gameScene.getOpponent().slowDownEffect();
+    		break;
+    	case TOOL:
+    		
+    		break;
     	case ENERGY_DRINK:
     		gameScene.setPlayerEnergy(0, 1, +50);
     		break;
     	case INVISIBLE_DRINK:
+    		gameScene.getUser().invisibleEffect();
     		break;
     	case INVINCIBLE_DRINK:
+    		gameScene.getUser().invincibleEffect();
     		break;
 		default:
 			break;
     	}
-    	minusStoreItem();
+    	minusItem();
     }
     
 

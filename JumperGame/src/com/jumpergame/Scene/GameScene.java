@@ -48,7 +48,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.jumpergame.AttackItem;
+
 import com.jumpergame.Item;
 import com.jumpergame.Player;
 import com.jumpergame.StoreItem;
@@ -61,6 +61,7 @@ import com.jumpergame.constant.GeneralConstants;
 public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
 {
 	public HUD gameHUD;
+	final GameScene gc = this;
 	
 	// Score
 	private Text scoreText;
@@ -94,9 +95,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3 = "platform3";
 	
 	// Stuff
-	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN 	= "coin";
-	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 	= "acid";
-	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE 	= "glue";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN 		= "coin";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 		= "acid";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE 		= "glue";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL 		= "tool";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY 		= "energy";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE 	= "invisible";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE 	= "invincible";
 	
 	// Player
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
@@ -117,10 +122,15 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	
 
 	// Item
-	private AttackItem dragItem;
+	private Item dragItem;
+	private StoreItem  currentDragItem;
+	private StoreItem  currentFloatingItem;
+	private HashMap<ItemType, StoreItem> itemMap;
 
 	public enum ItemType
 	{
+		// Money
+		COIN,
 		// Attack items
 		ACID,
 		GLUE,
@@ -179,34 +189,44 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	// @Bosh
 	// Item System
 	private void loadItem() {
-		createAttackItem(30,  50, ItemType.ACID, resourcesManager.acid_region);
-		createAttackItem(100, 50, ItemType.GLUE, resourcesManager.glue_region);
-		createAttackItem(170, 50, ItemType.TOOL, resourcesManager.tool_region);
+		itemMap = new HashMap<ItemType, StoreItem>();
+		createAttackItem(30,  50, ItemType.ACID, 300, resourcesManager.acid_region);
+		createAttackItem(100, 50, ItemType.GLUE, 500, resourcesManager.glue_region);
+		createAttackItem(170, 50, ItemType.TOOL, 800, resourcesManager.tool_region);
 		createStoreItem(240, 50, ItemType.ENERGY_DRINK, 200, resourcesManager.energy_region);
 		createStoreItem(310, 50, ItemType.INVISIBLE_DRINK, 500, resourcesManager.invisible_region);
 		createStoreItem(380, 50, ItemType.INVINCIBLE_DRINK, 1000, resourcesManager.invincible_region);
 		createStoreButton(450, 50, ItemType.BUY_BUTTON, resourcesManager.button_region);
 	}
-	private void createAttackItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
+	private void createAttackItem(final float x, final float y, final ItemType type, final int price, final ITextureRegion itemTextureRegion)
 	{	
-		final GameScene gc = this;
-		AttackItem item= new AttackItem(this, x, y, type, itemTextureRegion, vbom)
+		StoreItem item= new StoreItem(this, x, y, type, price, itemTextureRegion, vbom)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
 		    {
 		        if (pSceneTouchEvent.isActionDown() && dragItem == null)
 		        {	
-		        	if(getItemAmount() > 0)
+		        	if(buyItem){
+	        			this.buyStoreItem();
+		        	buyItem = false;
+		        	// scale down modifier of button
+		        	}
+		        	else
 		        	{
-			        	dragItem = new AttackItem(gc, x, y, type, itemTextureRegion, vbom);
-			            gameHUD.attachChild(dragItem);
+		        		if(getItemAmount() > 0 )
+			        	{
+			        		currentDragItem = this;
+				        	dragItem = new Item(gc, x, y, type, itemTextureRegion, vbom);
+				            gameHUD.attachChild(dragItem);
+			        	}		        	
 		        	}
 		        }
 		        return true;
 		    };
 			    
 		};
+		itemMap.put(type, item);
 		gameHUD.registerTouchArea(item);
 		gameHUD.attachChild(item);
 	}
@@ -225,7 +245,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 			        	// scale down modifier of button
 		        	}
 		        	else{
-		        		if (this.getItemAmount() >= 0)
+		        		if (this.getItemAmount() > 0)
 		        		{
 	        				this.useStoreItem();
 		        		}
@@ -235,12 +255,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		    };
 			    
 		};
+		itemMap.put(type, item);
 		gameHUD.registerTouchArea(item);
 		gameHUD.attachChild(item);
 	}
 	private void createStoreButton(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
 	{	
-		Item item= new Item(x, y, type, itemTextureRegion, vbom)
+		Item item= new Item(this, x, y, type, itemTextureRegion, vbom)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -373,22 +394,37 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN))
                 {
-                    levelObject = new Sprite(x, y, resourcesManager.coin_region, vbom)
-                    {
-                        @Override
-                        protected void onManagedUpdate(float pSecondsElapsed) 
-                        {
-                            super.onManagedUpdate(pSecondsElapsed);
-                            
-                            if (player.collidesWith(this))
-                            {
-                            	// Add money here
-                            	plusPlayerMoney(500);
-                                this.setVisible(false);
-                                this.setIgnoreUpdate(true);
-                            }
-                        }
-                    };
+                    levelObject = new Item(gc, x, y, ItemType.COIN, resourcesManager.coin_region, vbom);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID))
+                {
+                	levelObject = createFloatingItem(x, y, ItemType.ACID, resourcesManager.acid_region);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE))
+                {
+                	levelObject = createFloatingItem(x, y, ItemType.GLUE, resourcesManager.glue_region);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL))
+                {
+                	levelObject = createFloatingItem( x, y, ItemType.TOOL, resourcesManager.tool_region);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY))
+                {
+                	levelObject = createFloatingItem( x, y, ItemType.ENERGY_DRINK, resourcesManager.energy_region);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE))
+                {
+                	levelObject = createFloatingItem(x, y, ItemType.INVISIBLE_DRINK, resourcesManager.invisible_region);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE))
+                {
+                	levelObject = createFloatingItem(x, y, ItemType.INVINCIBLE_DRINK, resourcesManager.invincible_region);
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER))
@@ -417,6 +453,16 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 
                 return levelObject;
             }
+
+			private Sprite createFloatingItem( int x, int y, ItemType type, ITextureRegion region) {
+				Sprite object = new Item(gc, x, y, type, region, vbom);
+				if(type != ItemType.COIN){
+					currentFloatingItem = itemMap.get(type);
+	                currentFloatingItem.plusItem();
+				}
+				return object;
+			}
+
         });
         System.out.println("5");
         levelLoader.loadLevelFromAsset(activity.getAssets(), "level/" + levelID + ".lvl");
@@ -437,7 +483,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        if (pSceneTouchEvent.isActionUp() && dragItem != null)
 		        {
 		        	System.out.println("Dummy attacked!");
-		        	dragItem.useAttackItem();
+		        	currentDragItem.useStoreItem();
+		        	currentDragItem = null;
 		        	gameHUD.detachChild(dragItem);
 		        	dragItem.dispose();
 		        	dragItem = null;
@@ -483,7 +530,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
 	                        final float velocityX = endVector.x;
 	                        final float velocityY = endVector.y;
-	                        final Vector2 velocity = Vector2Pool.obtain(mGravityY * -velocityX *0.01f, mGravityY * -velocityY * 0.01f);
+	                        final int velocityFactor = getUser().getVelocityFactor();
+	                        final Vector2 velocity = Vector2Pool.obtain(velocityFactor * velocityX *0.01f, velocityFactor * velocityY * 0.01f);
 	                        player.returnBody().setLinearVelocity(velocity);
 	                        Vector2Pool.recycle(velocity);
 	                    // Record initial jump position
@@ -732,7 +780,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             ));            
         }
     }
-    private void plusPlayerMoney(final int deltaMoney)
+    public void plusPlayerMoney(final int deltaMoney)
     {
     	Player player1 = mPlayers.get(0);
     	int original = player1.getMoney();
@@ -761,7 +809,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     	moneyText.setText("Money: "+ String.valueOf(newPlayerMoney));
     	return buySuccess;
     }
-   
+    public Player getUser()
+    {
+    	return mPlayers.get(0);
+    }
+    public Player getOpponent()
+    {
+    	return mPlayers.get(1);
+    }
     @Override
     public void onAccelerationChanged(final AccelerationData pAccelerationData) {
         /*

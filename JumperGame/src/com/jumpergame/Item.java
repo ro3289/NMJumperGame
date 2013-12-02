@@ -4,6 +4,8 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
+import org.andengine.util.level.EntityLoader;
+import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
 
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Scene.GameScene;
@@ -17,7 +19,7 @@ public class Item extends Sprite{
 	protected int 				itemAmount;
 	protected Text				itemAmountText;
 
-	public Item(float pX, float pY, ItemType type, ITextureRegion pTextureRegion,
+	public Item(GameScene gc, float pX, float pY, ItemType type, ITextureRegion pTextureRegion,
 			VertexBufferObjectManager pVertexBufferObjectManager) {
 		super(pX, pY, pTextureRegion, pVertexBufferObjectManager);
 		setType(type);
@@ -31,5 +33,6 @@ public class Item extends Sprite{
 		return itemType;
 	}
 	
+	@Override
 
 }
