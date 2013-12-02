@@ -25,6 +25,7 @@ import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.input.touch.TouchEvent;
+import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.util.SAXUtils;
 import org.andengine.util.adt.align.HorizontalAlign;
 import org.andengine.util.level.EntityLoader;
@@ -47,6 +48,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.jumpergame.Item;
 import com.jumpergame.Player;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
@@ -70,7 +72,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	// jump setting
     private Vector2 initVector;
     private Vector2 endVector;
-    private boolean jumpState = false;
+    private boolean jumpState 	 = false;
 	
 	// Physics 
 	private PhysicsWorld physicsWorld;
@@ -88,8 +90,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	
 	// Stuff
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN 	= "coin";
-	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_HPDRINK = "hpDrink";
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID 	= "acid";
+	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE 	= "glue";
 	
 	// Player
 	private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
@@ -110,20 +112,35 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	
 
 	// Staff Dragging flag
-	private Sprite dragItem;
-	private boolean DRAG_ITEM = false;
+	private Item dragItem;
+	private HashMap<ItemType, Integer> itemAmount;
 	
+	public enum ItemType
+	{
+		// Attack items
+		ACID,
+		GLUE,
+		TOOL,
+		// Self items
+		ENERGY_DRINK,
+		INVISIBLE_DRINK,
+		INVINCIBLE_DRINK;
+	}
+	
+	// Create Item HUD
 	private void createHUD()
 	{
 		mScoreTextMap = new SparseArray<Text>();
 		mPlayerEnergies = new ArrayList<Rectangle>();
 		System.out.println("3");
 		gameHUD = new HUD();
+		
 		// Load Item
 		loadItem();
 		
-		Text thisScoreText = new Text(20, 420, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
-        Text dummyScoreText = new Text(20, 380, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
+		// Set Score 
+		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
+        Text dummyScoreText = new Text(20, 680, resourcesManager.mScoreFont, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
         thisScoreText.setAnchorCenter(0, 0);    
         thisScoreText.setText("Score: 0");
         dummyScoreText.setAnchorCenter(0, 0);    
@@ -152,34 +169,64 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 
 	    camera.setHUD(gameHUD);
 	}
-	
+	// @Bosh
+	// Item System
 	private void loadItem() {
-		Sprite acid = new Sprite(50, 50, resourcesManager.acid_region, vbom)
+		createAttackItem(30,  30, ItemType.ACID, resourcesManager.acid_region);
+		createAttackItem(100, 30, ItemType.GLUE, resourcesManager.glue_region);
+		createAttackItem(170, 30, ItemType.TOOL, resourcesManager.tool_region);
+		createStoreItem(240, 30, ItemType.ENERGY_DRINK, resourcesManager.energy_region);
+		createStoreItem(310, 30, ItemType.INVISIBLE_DRINK, resourcesManager.invisible_region);
+		createStoreItem(380, 30, ItemType.INVINCIBLE_DRINK, resourcesManager.invincible_region);
+	}
+	private void createAttackItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
+	{	
+		Item item= new Item(x, y, type, itemTextureRegion, vbom)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
 		    {
-		        if (pSceneTouchEvent.isActionDown() && !DRAG_ITEM)
+		        if (pSceneTouchEvent.isActionDown() && dragItem == null)
 		        {
-		        	System.out.println("Item!!!");
-		        	 dragItem = new Sprite(50, 50, resourcesManager.acid_drag_region, vbom);
-		            DRAG_ITEM = true;
+		        	dragItem = new Item(x, y, type, itemTextureRegion, vbom);
+		         //   DRAG_ITEM = true;
 		            gameHUD.attachChild(dragItem);
 		        }
 		        return true;
 		    };
 			    
 		};
-		gameHUD.registerTouchArea(acid);
-		gameHUD.attachChild(acid);
+		gameHUD.registerTouchArea(item);
+		gameHUD.attachChild(item);
 	}
-	/*
-	private void addToScore(int i)
-	{
-	    score += i;
-	    scoreText.setText("Score: " + score);
+	private void createStoreItem(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
+	{	
+		Item item= new Item(x, y, type, itemTextureRegion, vbom)
+		{
+			 @Override
+		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+		    {
+		        if (pSceneTouchEvent.isActionDown())
+		        {
+		        	switch (type)
+		        	{
+		        	case ENERGY_DRINK:
+		        		setPlayerEnergy(1, 0, +50);
+		        		break;
+		        	case INVISIBLE_DRINK:
+		        		break;
+		        	case INVINCIBLE_DRINK:
+		        		break;
+		        	}
+		        }
+		        return true;
+		    };
+			    
+		};
+		gameHUD.registerTouchArea(item);
+		gameHUD.attachChild(item);
 	}
-	*/
+	
 	private void createPhysics()
 	{
 	    physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, -SensorManager.GRAVITY_EARTH), false); 
@@ -227,9 +274,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     
     private void loadLevel(int levelID)
     {
-    	final Rectangle ground = new Rectangle(400, 5, 800, 10, vbom);
-        final Rectangle left = new Rectangle(5, 480/2, 10, 480*10, vbom);
-        final Rectangle right = new Rectangle(800 - 5, 240, 10, 480*10, vbom);
+    	final Rectangle ground = new Rectangle(240, 30, 480, 60, vbom);
+        final Rectangle left = new Rectangle(5, 480*5, 10, 480*10, vbom);
+        final Rectangle right = new Rectangle(480 - 5, 450*5, 10, 480*10, vbom);
 
         mPlayers = new ArrayList<Player>();
         PhysicsFactory.createBoxBody(physicsWorld, ground, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF).setUserData(new Sprite_Body(ground, "Wall"));
@@ -297,12 +344,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         {
                             super.onManagedUpdate(pSecondsElapsed);
                             
-                            /** 
-                             * TODO
-                             * we will later check if player collide with this (coin)
-                             * and if it does, we will increase score and hide coin
-                             * it will be completed in next articles (after creating player code)
-                             */
+                            if (player.collidesWith(this))
+                            {
+                            	// Add money here
+                               // addToScore(10);
+                                this.setVisible(false);
+                                this.setIgnoreUpdate(true);
+                            }
                         }
                     };
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
@@ -317,18 +365,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                             // TODO Latter we will handle it.
                         }
                         
-                        @Override 
-                        public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
-        			    {
-        			        if (pSceneTouchEvent.isActionUp() && DRAG_ITEM)
-        			        {
-        			        	
-        			        }
-        			        return true;
-        			    };
                     };
-                    //registerTouchArea(player);
-                    //camera.setChaseEntity(player);
+                    // registerTouchArea(player);
+                    // camera.setChaseEntity(player);
                     thisID = mPlayers.size();
                     mPlayers.add(player);
                     levelObject = player;
@@ -347,7 +386,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         levelLoader.loadLevelFromAsset(activity.getAssets(), "level/" + levelID + ".lvl");
         System.out.println("6");
         
-        mArrow = new Sprite(400, 240, resourcesManager.mDirectionTextureRegion, vbom);
+        mArrow = new Sprite(240, 400, resourcesManager.mDirectionTextureRegion, vbom);
 		dummy = new Player(200, 200, vbom, camera, physicsWorld,"dummy",2)
 		{
 
@@ -356,9 +395,31 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 				// TODO Auto-generated method stub
 				
 			}
-			
+			@Override 
+            public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+		    {
+		        if (pSceneTouchEvent.isActionUp() && dragItem != null)
+		        {
+		        	System.out.println("Dummy attacked!");
+		        	switch (dragItem.getType())
+		        	{	
+		        		case ACID:
+		        			setPlayerEnergy(1, 0, -100);
+		        			break;
+		        		case GLUE:
+		        			break;
+		        		default:
+		        			break;
+		        	}
+		        	gameHUD.detachChild(dragItem);
+		        	dragItem = null;
+		        //	DRAG_ITEM = false;
+		        }
+		        return true;
+		    };
 		};
-		attachChild(dummy);
+		this.registerTouchArea(dummy);
+		this.attachChild(dummy);
 		System.out.println("7");
         dummyID = mPlayers.size();
         System.out.println("8");
@@ -369,58 +430,73 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
 
 		if(physicsWorld != null ) {
-            if(pSceneTouchEvent.isActionDown()) {   
+            if(pSceneTouchEvent.isActionDown() && dragItem == null) {   
                 // Record initial position
                 initVector = new Vector2(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
                 // Show Direction
                 mArrow.setPosition(player.getX(), player.getY() +40 );
-                attachChild(mArrow);
+                activity.runOnUpdateThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        attachChild(mArrow);
+                    }
+                });
             }
             else if (pSceneTouchEvent.isActionUp()) {
                 if(!jumpState) {
-                    // Eject object
-                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
-                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
-                    if (deltaX < 50.0 && deltaY < 50.0) {
-                        shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-                    } else {
-                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
-                        final float velocityX = endVector.x;
-                        final float velocityY = endVector.y;
-                        final Vector2 velocity = Vector2Pool.obtain(mGravityY * -velocityX *0.01f, mGravityY * -velocityY * 0.01f);
-                        player.returnBody().setLinearVelocity(velocity);
-                        Vector2Pool.recycle(velocity);
-                    // Record initial jump position
-                        initBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
-                        jumpState = true;
-                    }
-                    // Item 
-                    if(dragItem != null)
-        			{
-        				gameHUD.detachChild(dragItem);
-        				DRAG_ITEM = false;
-        				dragItem = null;
-        				return true;
-        			}
+                	if(dragItem == null)
+                	{
+	                    // Eject object
+	                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
+	                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
+	                    if (deltaX < 50.0 && deltaY < 50.0) {
+	                        shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+	                    } else {
+	                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
+	                        final float velocityX = endVector.x;
+	                        final float velocityY = endVector.y;
+	                        final Vector2 velocity = Vector2Pool.obtain(mGravityY * -velocityX *0.01f, mGravityY * -velocityY * 0.01f);
+	                        player.returnBody().setLinearVelocity(velocity);
+	                        Vector2Pool.recycle(velocity);
+	                    // Record initial jump position
+	                        initBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
+	                        jumpState 	 = true;
+	                    }
+                	}
                 }
-                // Detach arrow 
-                detachChild(mArrow);
-            }
-            else if(pSceneTouchEvent.isActionMove()) {
-                endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
-                final float dX = endVector.x;
-                final float dY = endVector.y;
-                final float angle = (float) Math.atan2( dX, dY);
-                final float rotation = MathUtils.radToDeg(angle);
-                mArrow.setRotation(rotation);
-                
+                // Item 
                 if(dragItem != null)
     			{
+                	System.out.println("release item!!");
+    				gameHUD.detachChild(dragItem);
+    				dragItem.dispose();
+    				dragItem = null;
+    			}
+                // Detach arrow 
+                activity.runOnUpdateThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        detachChild(mArrow);
+                        System.out.println("aaaa");
+                    }
+                });
+                return true;
+            }
+            else if(pSceneTouchEvent.isActionMove()) {
+            	if(dragItem == null)
+            	{
+	                endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
+	                final float dX = endVector.x;
+	                final float dY = endVector.y;
+	                final float angle = (float) Math.atan2( dX, dY);
+	                final float rotation = MathUtils.radToDeg(angle);
+	                mArrow.setRotation(rotation);
+            	}
+            	else
+    			{
     				dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-    				return true;
     			}
             }
-            
             
             return true;
         }
@@ -488,7 +564,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     System.out.println("bd");
                     setPlayerEnergy(1, 0, -10);
                 }
-                
                 
                 if (x1.getBody() != null && x2.getBody() != null && jumpState) {
                     if(densityA ==2 || densityB == 2) {
