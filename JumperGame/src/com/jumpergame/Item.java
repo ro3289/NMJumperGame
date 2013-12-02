@@ -33,6 +33,5 @@ public class Item extends Sprite{
 		return itemType;
 	}
 	
-	@Override
 
 }

@@ -48,7 +48,6 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
-
 import com.jumpergame.Item;
 import com.jumpergame.Player;
 import com.jumpergame.StoreItem;
@@ -142,16 +141,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		BUY_BUTTON;
 	}
 	
-	// Create Item HUD
-	private void createHUD()
+	private void createInfoHUD()
 	{
 		mScoreTextMap = new SparseArray<Text>();
 		mPlayerEnergies = new ArrayList<Rectangle>();
 		System.out.println("3");
-		gameHUD = new HUD();
-		
-		// Load Item
-		loadItem();
+
 		
 		// Set Score 
 		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
@@ -184,7 +179,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             i++;
         }
 
-	    camera.setHUD(gameHUD);
 	}
 	// @Bosh
 	// Item System
@@ -300,8 +294,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     {
     	createBackground();	    
 	    createPhysics();
+	    gameHUD = new HUD();
+	    loadItem();
 	    loadLevel(1);
-	    createHUD();
+	    createInfoHUD();
+	    camera.setHUD(gameHUD);
 	    
 	    setOnSceneTouchListener(this);
 	    setOnAreaTouchListener(this);
@@ -394,12 +391,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN))
                 {
-                    levelObject = new Item(gc, x, y, ItemType.COIN, resourcesManager.coin_region, vbom);
+                	levelObject = createFloatingItem(x, y, ItemType.COIN, resourcesManager.coin_region);
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID))
                 {
+                	System.out.println("acid before");
                 	levelObject = createFloatingItem(x, y, ItemType.ACID, resourcesManager.acid_region);
+                	System.out.println("acid after");
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE))
@@ -454,12 +453,30 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 return levelObject;
             }
 
-			private Sprite createFloatingItem( int x, int y, ItemType type, ITextureRegion region) {
-				Sprite object = new Item(gc, x, y, type, region, vbom);
-				if(type != ItemType.COIN){
-					currentFloatingItem = itemMap.get(type);
-	                currentFloatingItem.plusItem();
-				}
+			private Sprite createFloatingItem( int x, int y, final ItemType type, ITextureRegion region) {
+				Sprite object = new Item(gc, x, y, type, region, vbom){
+					 @Override
+				     protected void onManagedUpdate(float pSecondsElapsed) 
+				     {
+				         super.onManagedUpdate(pSecondsElapsed);
+				         
+				         if (gc.getUser().collidesWith(this))
+				         {
+				         	 if(type == ItemType.COIN)
+				         	 {
+				         		 gc.plusPlayerMoney(500);
+				         	 }
+				         	 else
+				         	 {
+				         		currentFloatingItem = itemMap.get(type);
+				                currentFloatingItem.plusItem();
+				         	 }
+				             this.setVisible(false);
+				             this.setIgnoreUpdate(true);
+				         }
+				     }
+				};
+				
 				return object;
 			}
 
@@ -553,7 +570,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     @Override
                     public void run() {
                         detachChild(mArrow);
-                        System.out.println("aaaa");
                     }
                 });
                 return true;
