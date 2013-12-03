@@ -63,12 +63,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	final GameScene gc = this;
 	
 	// Score
-	private Text scoreText;
-	private int score = 0;
 	private SparseArray<Text> mScoreTextMap;
 	// Money
 	private Text moneyText;
-	private boolean buyItem = false;
+	
 	//energy
 	private ArrayList<Rectangle> mPlayerEnergies;
 	//bullets
@@ -125,11 +123,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private StoreItem  currentDragItem;
 	private StoreItem  currentFloatingItem;
 	private HashMap<ItemType, StoreItem> itemMap;
+	private boolean buyItem = false;
 
 	public enum ItemType
 	{
 		// Money
 		COIN,
+		// Bullet
+		BULLET,
 		// Attack items
 		ACID,
 		GLUE,
@@ -138,6 +139,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		ENERGY_DRINK,
 		INVISIBLE_DRINK,
 		INVINCIBLE_DRINK,
+		// Buy button
 		BUY_BUTTON;
 	}
 	
@@ -641,6 +643,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 	System.out.println("player");
                 }
                 
+                //  Bullet Contact Event
+                //  Contact Wall
                 if(userDataA.getName() == "Wall" && userDataB.getName() == "Bullet") {
                     removeEntity((IEntity)userDataB.getEntity());
                     System.out.println("wb");
@@ -648,7 +652,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     removeEntity((IEntity)userDataA.getEntity());
                     System.out.println("bw");
                 }
-                
+                // Contact Player
                 if(userDataA.getName() == "dummy" && userDataB.getName() == "Bullet") {
                     removeEntity((IEntity)userDataB.getEntity());
                     System.out.println("db");

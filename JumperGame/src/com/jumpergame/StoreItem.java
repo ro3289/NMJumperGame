@@ -35,6 +35,8 @@ public class StoreItem extends Item{
 		itemAmountText = new Text(pX, pY + 30 , resourcesManager.mItemAmountFont, "0", 10 ,new TextOptions(HorizontalAlign.LEFT), resourcesManager.vbom);
 		itemAmountText.setAnchorCenter(0, 0);
 		gameScene.gameHUD.attachChild(itemAmountText);
+		
+		setAlpha(0.3f);
 	}
 	
 	// Method
@@ -55,11 +57,19 @@ public class StoreItem extends Item{
     {
     	itemAmount++;
     	itemAmountText.setText(String.valueOf(itemAmount));
+    	if(itemAmount > 0)
+    	{
+    		setAlpha(1f);
+    	}
     }	
     private void minusItem()
     {
     	itemAmount = (itemAmount == 0)? 0 : itemAmount -1;
     	itemAmountText.setText(String.valueOf(itemAmount));
+    	if(itemAmount == 0)
+    	{
+    		setAlpha(0.3f);
+    	}
     }
     public void useStoreItem()
     {
