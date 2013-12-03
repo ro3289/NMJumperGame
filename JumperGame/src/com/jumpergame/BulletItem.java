@@ -22,8 +22,9 @@ public class BulletItem extends Item{
 	private final float endX;
 	private final float endY;
 	private final float velocityConstant;
+	private String bodyName;
 
-	public BulletItem(GameScene gc,PhysicsWorld pw,float pX, float pY, ItemType type, 
+	public BulletItem(GameScene gc, PhysicsWorld pw, float pX, float pY, ItemType type, 
 			ITextureRegion pTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager) {
 		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
 		
@@ -35,20 +36,33 @@ public class BulletItem extends Item{
 		
 		// Register physics handler
 		physicsWorld = pw;
-		bulletBody = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, GeneralConstants.BULLET_FIXTURE_DEF);
-		bulletBody.setUserData(new Sprite_Body(this, "Bullet"));
+		bulletBody = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.KinematicBody, GeneralConstants.BULLET_FIXTURE_DEF);
+		setBodyName();
+		bulletBody.setUserData(new Sprite_Body(this, bodyName));
 		physicsWorld.registerPhysicsConnector(new PhysicsConnector(this, bulletBody, true, true));
 	    this.setUserData(bulletBody);
 	    
 	    // Determine velocity by type
-	    if(type == ItemType.BULLET)
-	    {
-	    	velocityConstant = GeneralConstants.NORMAL_BULLET_VELOCITY;
-	    }
-	    else
-	    {
-	    	velocityConstant = GeneralConstants.ITEM_BULLET_VELOCITY;
-	    }
+    	velocityConstant = (type == ItemType.BULLET) ? GeneralConstants.NORMAL_BULLET_VELOCITY : GeneralConstants.ITEM_BULLET_VELOCITY;
+	 
+	}
+
+	private void setBodyName() {
+		switch (itemType)
+		{
+			case BULLET:
+				bodyName = new String("BULLET");
+				break;
+			case ACID:
+				bodyName = new String("ACID");
+				break;
+			case GLUE:
+				bodyName = new String("GLUE");
+				break;
+			default:
+				bodyName = new String("");
+				break;
+		}
 	}
 
 	public void shoot() {
@@ -63,5 +77,21 @@ public class BulletItem extends Item{
         float v = (float) java.lang.Math.pow(java.lang.Math.pow(delX, 2) + java.lang.Math.pow(delY, 2), 0.5);
         return new Vector2(velocityConstant * delX / v, velocityConstant * delY / v);
     }
-	
+	public void showBulletEffect()
+	{         	 
+		switch (itemType)
+	 	 {
+	 	 	case BULLET:
+	 	 		gameScene.setPlayerEnergy(1,0,-10);
+	     		 break;
+	     	case ACID:
+	     		gameScene.setPlayerEnergy(1,0,-50);
+	     		 break;
+	     	case GLUE:
+	     		gameScene.getOpponent().slowDownEffect();
+	     		 break;
+	     	default:
+	     		break;
+	 	 }
+	}
 }

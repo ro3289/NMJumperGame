@@ -3,6 +3,7 @@ package com.jumpergame;
 
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
+import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.align.HorizontalAlign;
@@ -66,19 +67,34 @@ public class StoreItem extends Item{
     		setAlpha(0.3f);
     	}
     }
-    public void useStoreItem()
+
+    public void useAttackItem(PhysicsWorld pw, final float pX, final float pY)
     {
     	switch (itemType)
     	{
     	case ACID:
-    		gameScene.setPlayerEnergy(1,0,-100);
+    		// gameScene.setPlayerEnergy(1,0,-100);
+    		gameScene.getUser();
+    		BulletItem acidBullet = new BulletItem(gameScene, pw, pX ,pY, itemType, resourcesManager.acid_bullet_region, resourcesManager.vbom);
+    		acidBullet.shoot();
     		break;
     	case GLUE:
-    		gameScene.getOpponent().slowDownEffect();
+    		BulletItem glueBullet = new BulletItem(gameScene, pw, pX, pY, itemType, resourcesManager.glue_bullet_region, resourcesManager.vbom);
+    		glueBullet.shoot();
     		break;
     	case TOOL:
     		
     		break;
+		default:
+			break;
+    	}
+    	minusItem();
+    }
+    
+    public void useEffectItem()
+    {
+    	switch (itemType)
+    	{
     	case ENERGY_DRINK:
     		gameScene.setPlayerEnergy(0, 1, +50);
     		break;

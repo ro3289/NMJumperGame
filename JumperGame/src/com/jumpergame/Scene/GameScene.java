@@ -151,7 +151,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		mPlayerEnergies = new ArrayList<Rectangle>();
 		System.out.println("3");
 
-		
 		// Set Score 
 		Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
         Text dummyScoreText = new Text(20, 680, resourcesManager.mScoreFont, "Player2 Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
@@ -192,9 +191,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		createAttackItem(90,  50, ItemType.ACID, 300, resourcesManager.acid_region);
 		createAttackItem(160, 50, ItemType.GLUE, 500, resourcesManager.glue_region);
 		createAttackItem(230, 50, ItemType.TOOL, 800, resourcesManager.tool_region);
-		createStoreItem(300, 50, ItemType.ENERGY_DRINK, 200, resourcesManager.energy_region);
-		createStoreItem(370, 50, ItemType.INVISIBLE_DRINK, 500, resourcesManager.invisible_region);
-		createStoreItem(440, 50, ItemType.INVINCIBLE_DRINK, 1000, resourcesManager.invincible_region);
+		createEffectItem(300, 50, ItemType.ENERGY_DRINK, 200, resourcesManager.energy_region);
+		createEffectItem(370, 50, ItemType.INVISIBLE_DRINK, 500, resourcesManager.invisible_region);
+		createEffectItem(440, 50, ItemType.INVINCIBLE_DRINK, 1000, resourcesManager.invincible_region);
 	}
 	private void createAttackItem(final float x, final float y, final ItemType type, final int price, final ITextureRegion itemTextureRegion)
 	{	
@@ -226,7 +225,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		gameHUD.registerTouchArea(item);
 		gameHUD.attachChild(item);
 	}
-	private void createStoreItem(final float x, final float y, final ItemType type,final int p, final ITextureRegion itemTextureRegion)
+	private void createEffectItem(final float x, final float y, final ItemType type,final int p, final ITextureRegion itemTextureRegion)
 	{	
 		StoreItem item= new StoreItem(this, x, y, type, p, itemTextureRegion, vbom)
 		{
@@ -241,7 +240,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        	else{
 		        		if (this.getItemAmount() > 0)
 		        		{
-	        				this.useStoreItem();
+	        				this.useEffectItem();
 		        		}
 		        	}
 		        }
@@ -460,7 +459,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             }
 
 			private Sprite createFloatingItem( int x, int y, final ItemType type, ITextureRegion region) {
-				Sprite object = new Item(gc, x, y, type, region, vbom){
+				Sprite object = new Item(gc, x, y, type, region, vbom)
+				{
 					 @Override
 				     protected void onManagedUpdate(float pSecondsElapsed) 
 				     {
@@ -492,6 +492,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         System.out.println("6");
         
         mArrow = new Sprite(240, 400, resourcesManager.mDirectionTextureRegion, vbom);
+        
+        // Opponent attacked method
 		dummy = new Player(200, 200, vbom, camera, physicsWorld,"dummy",2)
 		{
 
@@ -506,7 +508,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        if (pSceneTouchEvent.isActionUp() && dragItem != null)
 		        {
 		        	System.out.println("Dummy attacked!");
-		        	currentDragItem.useStoreItem();
+		        	currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
 		        	currentDragItem = null;
 		        	gameHUD.detachChild(dragItem);
 		        	dragItem.dispose();
@@ -552,7 +554,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    // Eject object
 	                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
 	                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
-	                    if (deltaX < 50.0 && deltaY < 50.0) {
+	                    if (deltaX < 20.0 && deltaY < 20.0) {
 	                        // shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
 	                    	BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
 	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom);
@@ -613,6 +615,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	{
 	    ContactListener contactListener = new ContactListener()
 	    {
+	    	boolean checkBullet = false;
+	    	
 	        public void beginContact(Contact contact)
 	        {
 	            final Fixture x1 = contact.getFixtureA();
@@ -624,55 +628,25 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 
                 Sprite_Body userDataA = (Sprite_Body) BodyA.getUserData();
                 Sprite_Body userDataB = (Sprite_Body) BodyB.getUserData();
-                if(userDataA.getName() != null)
+                
+                	System.out.println("A: " + userDataA.getName());
+                	System.out.println("B: " + userDataB.getName());
+                	
+                checkBullet = (userDataB.getName().equals("BULLET") || 
+                						userDataB.getName().equals("ACID") || 
+                						userDataB.getName().equals("GLUE"))? true : false; 
+                
+                if (userDataA.getName().equals("dummy") && checkBullet)
                 {
-                	System.out.println("a");
-                System.out.println(userDataA.getName());
-                }
-                if(userDataB.getName() != null)
-                {
-                	System.out.println("b");
-                    System.out.println(userDataB.getName());
-                }
-                if(BodyA.getUserData() != null)
-                {
-                	System.out.println("c");
-                	System.out.println(BodyA.getUserData());
-                }
-                if(BodyB.getUserData() != null)
-                {
-                	System.out.println("d");
-                    System.out.println(BodyB.getUserData());
-                }
-                if(userDataA.getName() == "dummy"||userDataB.getName()=="dummy")
-                {
-                	System.out.println("dummy");
-                }
-                if(userDataA.getName() == "thisPlayer"||userDataB.getName()=="thisPlayer")
-                {
-                	System.out.println("player");
+                	
+                	((BulletItem) userDataB.getEntity()).showBulletEffect();
+                	removeBullet(userDataB.getEntity());
+                	System.out.println("attack");
+                	BodyA.setLinearVelocity(new Vector2(0,0));
+                	BodyA.applyForce(0, 0, dummy.getX(), dummy.getY());
                 }
                 
-                //  Bullet Contact Event
-                //  Contact Wall
-                if(userDataA.getName() == "Wall" && userDataB.getName() == "Bullet") {
-                	removeBullet((IEntity)userDataB.getEntity());
-                    System.out.println("wb");
-                } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "Wall") {
-                	removeBullet((IEntity)userDataA.getEntity());
-                    System.out.println("bw");
-                }
-                // Contact Player
-                if(userDataA.getName() == "dummy" && userDataB.getName() == "Bullet") {
-                    removeBullet((IEntity)userDataB.getEntity());
-                    System.out.println("db");
-                    setPlayerEnergy(1, 0, -10);
-                } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "dummy") {
-                	removeBullet((IEntity)userDataA.getEntity());
-                    System.out.println("bd");
-                    setPlayerEnergy(1, 0, -10);
-                }
-                
+               
                 if (x1.getBody() != null && x2.getBody() != null && jumpState) {
                     if(densityA ==2 || densityB == 2) {
                         computeScore();
@@ -710,7 +684,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 
 	        public void postSolve(Contact contact, ContactImpulse impulse)
 	        {
-
+	        	final Fixture x1 = contact.getFixtureA();
+		        final Fixture x2 = contact.getFixtureB();
+	        	if(checkBullet){
+	            	x1.getBody().setLinearVelocity(new Vector2(0,0));
+                	x1.getBody().applyForce(0, 0, dummy.getX(), dummy.getY());
+	            }
 	        }
 	    };
 	    return contactListener;
@@ -839,7 +818,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         Vector2Pool.recycle(gravity);
     }
     
-    private void removeBullet(final IEntity pIEntity) {
+    public void removeBullet(final IEntity pIEntity) {
         activity.runOnUpdateThread(new Runnable() {
             @Override
             public void run() {
