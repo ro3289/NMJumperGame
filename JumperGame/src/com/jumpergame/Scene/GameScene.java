@@ -46,6 +46,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
@@ -126,6 +127,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private StoreItem  currentFloatingItem;
 	private HashMap<ItemType, StoreItem> itemMap;
 	private boolean buyItem = false;
+	
+	//private ArrayList<Fixture> f;
+	private ArrayList<ArrayList<Fixture>> ff;
 
 	public enum ItemType
 	{
@@ -335,9 +339,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     private void loadLevel(int levelID)
     {
     	final Rectangle ground = new Rectangle(240, 50, 480, 100, vbom);
-        final Rectangle left = new Rectangle(5, 480*5, 10, 480*10, vbom);
-        final Rectangle right = new Rectangle(480 - 5, 450*5, 10, 480*10, vbom);
-
+        final Rectangle left = new Rectangle(5, 800*5, 10, 800*10, vbom);
+        final Rectangle right = new Rectangle(480 - 5, 800*5, 10, 800*10, vbom);
+        ff=new ArrayList<ArrayList<Fixture>>();
         mPlayers = new ArrayList<Player>();
         PhysicsFactory.createBoxBody(physicsWorld, ground, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF).setUserData(new Sprite_Body(ground, "Wall"));
         PhysicsFactory.createBoxBody(physicsWorld, left, BodyType.StaticBody, WALL_FIXTURE_DEF).setUserData(new Sprite_Body(left, "Wall"));
@@ -377,9 +381,46 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 
                 if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
                 {
-                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
-                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF);
+                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom)
+                    {
+                    	
+                    	@Override
+                        protected void onManagedUpdate(float pSecondsElapsed) 
+                        {
+                            super.onManagedUpdate(pSecondsElapsed);
+                            System.out.println("bbbb");
+                            System.out.println(ff.size());
+                        	if(player.returnBody().getLinearVelocity().y > 0 )
+                        	{
+                        		System.out.println(":)))");
+                        		for(int k=0; k<ff.size();k++)
+                        		{
+                        			ArrayList<Fixture> f=ff.get(k);
+                        		Filter fil=f.get(0).getFilterData();
+                            	fil.categoryBits=CATEGORYBIT_WALL;
+                            	fil.maskBits=MASKBITS_WALL2;
+                            	f.get(0).setFilterData(fil);
+                        		}
+                        	}
+                        	else
+                        	{
+                        		System.out.println(":(((");
+                        		for(int k=0; k<ff.size();k++)
+                        		{
+                        			ArrayList<Fixture> f=ff.get(k);
+                        		Filter fil=f.get(0).getFilterData();
+                        	fil.categoryBits=CATEGORYBIT_WALL;
+                        	fil.maskBits=MASKBITS_WALL;
+                        	f.get(0).setFilterData(fil);
+                        		}
+                        	}
+                        }                    	
+                    };
+                    System.out.println("aaaa");
+                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, GROUND_AND_STAIR2_FIXTURE_DEF);
                     body.setUserData(new Sprite_Body(levelObject, "Wall"));
+                    
+                    ff.add( body.getFixtureList()) ;
                 } 
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2))
                 {
@@ -557,7 +598,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                        final float velocityX = endVector.x;
 	                        final float velocityY = endVector.y;
 	                        final int velocityFactor = getUser().getVelocityFactor();
-	                        final Vector2 velocity = Vector2Pool.obtain(velocityFactor * velocityX *0.01f, velocityFactor * velocityY * 0.01f);
+	                        final Vector2 velocity = Vector2Pool.obtain(velocityFactor * velocityX *0.01f, velocityFactor * velocityY * 0.01f*0.35f);
+	                        //float impulse = player.returnBody().getMass() * 10;
+	                        //player.returnBody().ApplyLinearImpulse( b2Vec2(0,impulse), body->GetWorldCenter() );
 	                        player.returnBody().setLinearVelocity(velocity);
 	                        Vector2Pool.recycle(velocity);
 	                    // Record initial jump position
@@ -668,8 +711,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     setPlayerEnergy(1, 0, -10);
                 }
                 
-                if (x1.getBody() != null && x2.getBody() != null && jumpState) {
+                if (x1.getBody() != null && x2.getBody() != null) {
                     if(densityA ==2 || densityB == 2) {
+                    	Vector2 tmp=player.returnBody().getLinearVelocity();
+                    	if(tmp.y<0)
+                    	{
+                    		
                         computeScore();
                         System.out.println("Contact");                        
                         	
@@ -680,6 +727,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         player.returnBody().setLinearVelocity(velocity);
                     //  Vector2Pool.recycle(velocity); // Error message: more items recycled than obtained
                         jumpState = false;
+                    	}
                     }
                 }
 	        }
