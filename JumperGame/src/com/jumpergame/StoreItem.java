@@ -1,30 +1,25 @@
 package com.jumpergame;
 
+
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.align.HorizontalAlign;
 
-import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Scene.GameScene;
 import com.jumpergame.Scene.GameScene.ItemType;
 
 public class StoreItem extends Item{
 	
-	protected int  itemPrice;
-	private Text itemPriceText;
+	protected int  	itemPrice;
+	private   Text 	itemPriceText;
+	protected int 	itemAmount;
+	protected Text	itemAmountText;
 	
 	public StoreItem(GameScene gc, float pX, float pY, ItemType type, int price,
-			ITextureRegion pTextureRegion,
-			VertexBufferObjectManager pVertexBufferObjectManager) {
+			ITextureRegion pTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager){
 		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
-		
-		gameScene 			= gc;
-		resourcesManager    = ResourcesManager.getInstance();
-		
-		
-		setType(type);
 		
 		itemPrice = price;
 		itemPriceText = new Text(pX, pY - 50 , resourcesManager.mPriceFont, String.valueOf(itemPrice), 10 ,new TextOptions(HorizontalAlign.LEFT), resourcesManager.vbom);
