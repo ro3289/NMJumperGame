@@ -13,16 +13,16 @@ import com.jumpergame.Scene.GameScene.ItemType;
 
 public class Item extends Sprite{
 	
-	protected GameScene 		gameScene;
-	protected ResourcesManager 	resourcesManager;
-	protected ItemType 			itemType;
-	protected int 				itemAmount;
-	protected Text				itemAmountText;
+	protected GameScene 				gameScene;
+	protected static ResourcesManager 	resourcesManager;
+	protected ItemType 					itemType;
 
 	public Item(GameScene gc, float pX, float pY, ItemType type, ITextureRegion pTextureRegion,
 			VertexBufferObjectManager pVertexBufferObjectManager) {
 		super(pX, pY, pTextureRegion, pVertexBufferObjectManager);
 		setType(type);
+		resourcesManager = ResourcesManager.getInstance();
+		gameScene = gc;
 	}
 
 	public void setType(ItemType type){

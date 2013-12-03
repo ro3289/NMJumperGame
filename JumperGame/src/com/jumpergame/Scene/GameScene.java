@@ -26,6 +26,7 @@ import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.opengl.texture.region.ITextureRegion;
+import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.SAXUtils;
 import org.andengine.util.adt.align.HorizontalAlign;
 import org.andengine.util.level.EntityLoader;
@@ -48,6 +49,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.jumpergame.BulletItem;
 import com.jumpergame.Item;
 import com.jumpergame.Player;
 import com.jumpergame.StoreItem;
@@ -60,7 +62,7 @@ import com.jumpergame.constant.GeneralConstants;
 public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
 {
 	public HUD gameHUD;
-	final GameScene gc = this;
+	private final GameScene gc = this;
 	
 	// Score
 	private SparseArray<Text> mScoreTextMap;
@@ -546,7 +548,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
 	                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
 	                    if (deltaX < 50.0 && deltaY < 50.0) {
-	                        shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+	                        // shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+	                    	BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
+	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom);
+	                    	bullet.shoot();
 	                    } else {
 	                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
 	                        final float velocityX = endVector.x;
@@ -646,19 +651,19 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 //  Bullet Contact Event
                 //  Contact Wall
                 if(userDataA.getName() == "Wall" && userDataB.getName() == "Bullet") {
-                    removeEntity((IEntity)userDataB.getEntity());
+                	removeBullet((IEntity)userDataB.getEntity());
                     System.out.println("wb");
                 } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "Wall") {
-                    removeEntity((IEntity)userDataA.getEntity());
+                	removeBullet((IEntity)userDataA.getEntity());
                     System.out.println("bw");
                 }
                 // Contact Player
                 if(userDataA.getName() == "dummy" && userDataB.getName() == "Bullet") {
-                    removeEntity((IEntity)userDataB.getEntity());
+                    removeBullet((IEntity)userDataB.getEntity());
                     System.out.println("db");
                     setPlayerEnergy(1, 0, -10);
                 } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "dummy") {
-                    removeEntity((IEntity)userDataA.getEntity());
+                	removeBullet((IEntity)userDataA.getEntity());
                     System.out.println("bd");
                     setPlayerEnergy(1, 0, -10);
                 }
@@ -717,32 +722,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     // Methods
     // ===========================================================
 	
-	private void shoot(float x, float y) {
-        final Rectangle bullet;
-        final Body body;
-        
-        bullet = new Rectangle(player.getX(), player.getY(), 10, 10, vbom);
-        bullet.setColor(Color.RED);
-        body = PhysicsFactory.createCircleBody(physicsWorld, bullet, BodyType.DynamicBody, BULLET_FIXTURE_DEF);
-        body.setUserData(new Sprite_Body(bullet, "Bullet"));
-        
-        physicsWorld.registerPhysicsConnector(new PhysicsConnector(bullet, body, true, true));
-        
-        bullet.setUserData(body);
-        bullet.setTag(thisID);
-        mBullets.put(mBulletCount++, bullet);
-        attachChild(bullet);
-        
-        body.setLinearVelocity(bulletVelocity(player.getX(), player.getY(), x, y));
-    }
-	
-	private Vector2 bulletVelocity(float initX, float initY, float finX, float finY) {
-        float delX = finX-initX;
-        float delY = finY-initY;
-        float v = (float) java.lang.Math.pow(java.lang.Math.pow(delX, 2) + java.lang.Math.pow(delY, 2), 0.5);
-        return new Vector2(BULLET_VELOCITY * delX / v, BULLET_VELOCITY * delY / v);
-    }
-	
+
 	private void computeScore() {
         final float mBodyVelocityY = (player.returnBody().getLinearVelocity().y > 0 )? player.returnBody().getLinearVelocity().y : -player.returnBody().getLinearVelocity().y ;
         
@@ -854,7 +834,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         Vector2Pool.recycle(gravity);
     }
     
-    private void removeEntity(final IEntity pIEntity) {
+    private void removeBullet(final IEntity pIEntity) {
         activity.runOnUpdateThread(new Runnable() {
             @Override
             public void run() {
