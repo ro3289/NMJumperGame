@@ -20,7 +20,8 @@ public interface GeneralConstants {
     public static final int FULL_ENERGY = 150;
     public static final int FULL_MAGAZINE_CAPACITY = 30;
     
-    public static final int BULLET_VELOCITY = 30;
+    public static final int NORMAL_BULLET_VELOCITY = 30;
+    public static final int ITEM_BULLET_VELOCITY = 10;
     public static final int BULLET_POWER = 30;
     
     /**

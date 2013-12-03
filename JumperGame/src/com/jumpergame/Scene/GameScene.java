@@ -527,6 +527,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	@Override
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
 
+		// Convert touch event to camera screen touch event first
+		if(dragItem != null){
+			camera.convertSceneTouchEventToCameraSceneTouchEvent(pSceneTouchEvent);
+		}
+    	
 		if(physicsWorld != null ) {
             if(pSceneTouchEvent.isActionDown() && dragItem == null) {   
                 // Record initial position
@@ -594,7 +599,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                mArrow.setRotation(rotation);
             	}
             	else
-    			{
+    			{	
     				dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
     			}
             }
