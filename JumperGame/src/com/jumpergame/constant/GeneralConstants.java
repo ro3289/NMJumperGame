@@ -20,7 +20,8 @@ public interface GeneralConstants {
     public static final int FULL_ENERGY = 150;
     public static final int FULL_MAGAZINE_CAPACITY = 30;
     
-    public static final int BULLET_VELOCITY = 30;
+    public static final int NORMAL_BULLET_VELOCITY = 20;
+    public static final int ITEM_BULLET_VELOCITY = 10;
     public static final int BULLET_POWER = 30;
     
     /**
@@ -52,7 +53,7 @@ public interface GeneralConstants {
     public static final FixtureDef WALL_FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.5f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);
     public static final FixtureDef GROUND_AND_STAIR_FIXTURE_DEF = PhysicsFactory.createFixtureDef(2, 0f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);
     public static final FixtureDef THIS_PLAYER_FIXTURE_DEF = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f, false, CATEGORYBIT_THIS_PLAYER, MASKBITS_THIS_PLAYER, (short)0);
-    public static final FixtureDef BULLET_FIXTURE_DEF = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f, false, CATEGORYBIT_BULLET, MASKBITS_BULLET, (short)0);
+    public static final FixtureDef BULLET_FIXTURE_DEF = PhysicsFactory.createFixtureDef(0.01f, 0.5f, 0.5f, false, CATEGORYBIT_BULLET, MASKBITS_BULLET, (short)0);
     public static final FixtureDef OTHER_PLAYER_FIXTURE_DEF = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f, false, CATEGORYBIT_OTHER_PLAYER, MASKBITS_OTHER_PLAYER, (short)0);
     public static final FixtureDef GROUND_AND_STAIR2_FIXTURE_DEF = PhysicsFactory.createFixtureDef(2f, 0f, 0f, false, CATEGORYBIT_WALL, MASKBITS_WALL2, (short)0);
 }

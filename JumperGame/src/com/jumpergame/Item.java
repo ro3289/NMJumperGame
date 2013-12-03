@@ -1,11 +1,8 @@
 package com.jumpergame;
 
 import org.andengine.entity.sprite.Sprite;
-import org.andengine.entity.text.Text;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
-import org.andengine.util.level.EntityLoader;
-import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
 
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Scene.GameScene;
