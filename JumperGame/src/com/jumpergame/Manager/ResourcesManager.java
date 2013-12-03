@@ -59,7 +59,7 @@ public class ResourcesManager {
     public ITextureRegion platform2_region;
     public ITextureRegion platform3_region;
     
-    // Stuff Texture Regions
+    // Item & Money Texture Regions
     public ITextureRegion coin_region;
     public ITextureRegion acid_region;
     public ITextureRegion glue_region;
@@ -68,6 +68,11 @@ public class ResourcesManager {
     public ITextureRegion invisible_region;
     public ITextureRegion invincible_region;
     public ITextureRegion button_region;
+    
+    // Bullet Texture Region
+    public ITextureRegion normal_bullet_region;
+    public ITextureRegion acid_bullet_region;
+    public ITextureRegion glue_bullet_region;
     
     // Player TextureRegion
     public ITiledTextureRegion player_region;
@@ -149,7 +154,7 @@ public class ResourcesManager {
         platform2_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform2.png");
         platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
         
-        // Load stuff texture
+        // Load item texture
         coin_region 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
         acid_region			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid.png");
         glue_region			= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "glue.png");
@@ -159,10 +164,15 @@ public class ResourcesManager {
         invincible_region 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "invincible.png");
         button_region 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "buy.png");
         
+        // Load bullet texture
+        acid_bullet_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "acid_bullet.png");
+        glue_bullet_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "glue_bullet.png");
+        normal_bullet_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "normal_bullet.png");
+        
         // Load player texture
         player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
         
-//        mDirectionTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 64, 64, TextureOptions.BILINEAR);
+        // Load jump direction texture
         mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "up_arrow.jpg");
         
         System.out.println("2");
@@ -181,12 +191,15 @@ public class ResourcesManager {
     private void loadGameFonts()
     {
     	FontFactory.setAssetBasePath("font/");
+    	
     	final ITexture scoreFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
         mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 27, true, Color.WHITE);
         mScoreFont.load();
+        
         final ITexture priceFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
         mPriceFont = FontFactory.createFromAsset(activity.getFontManager(), priceFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
         mPriceFont.load();
+        
         final ITexture itemAmountFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
         mItemAmountFont = FontFactory.createFromAsset(activity.getFontManager(), itemAmountFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
         mItemAmountFont.load();
