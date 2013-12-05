@@ -83,6 +83,29 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     
     // Physics 
     private PhysicsWorld physicsWorld;
+    
+    // Level loader
+    private static final String TAG_ENTITY = "entity";
+    private static final String TAG_ENTITY_ATTRIBUTE_X = "x";
+    private static final String TAG_ENTITY_ATTRIBUTE_Y = "y";
+    private static final String TAG_ENTITY_ATTRIBUTE_TYPE = "type";
+        
+    // Staircase
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1 = "platform1";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2 = "platform2";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3 = "platform3";
+    
+    // Stuff
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN        = "coin";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID        = "acid";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE        = "glue";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL        = "tool";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY      = "energy";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE   = "invisible";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE  = "invincible";
+    
+    // Player
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
 
     private Player player;
     private Player dummy;
