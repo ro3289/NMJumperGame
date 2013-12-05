@@ -7,6 +7,7 @@ import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.opengl.texture.region.ITiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import com.badlogic.gdx.math.Vector2;
@@ -23,9 +24,9 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
     // CONSTRUCTOR
     // ---------------------------------------------
     
-    public Player(float pX, float pY, VertexBufferObjectManager vbo, Camera camera, PhysicsWorld physicsWorld, String name, int type)
+    public Player(float pX, float pY, VertexBufferObjectManager vbo, Camera camera, PhysicsWorld physicsWorld, String name, int type, ITiledTextureRegion region)
     {
-        super(pX, pY, ResourcesManager.getInstance().player_region, vbo);
+        super(pX, pY, region, vbo);
         userdata=name;
         playerType=type;
         createPhysics(camera, physicsWorld);
@@ -86,7 +87,14 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
      }
 
 	     });*/
-	     animate(new long[]{ 100, 100, 100, 100, 100, 100, 100, 100}, 0, 7, true);
+         if(mTextureRegion == ResourcesManager.getInstance().player1_region)
+         {
+        	 animate(new long[]{ 100, 100, 100, 100}, 0, 3, true);
+         }
+         if(mTextureRegion == ResourcesManager.getInstance().player2_region)
+         {
+        	 animate(new long[]{ 100, 100, 100, 100, 100, 100, 100, 100}, 0, 7, true);
+         }
 	     setUserData(body);
 	 }
 	 
