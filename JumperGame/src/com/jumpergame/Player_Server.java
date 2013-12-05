@@ -22,7 +22,8 @@ public class Player_Server implements GeneralConstants {
     // ===========================================================
     
     private String IP;
-    private int id;
+    private int pID;
+    private int oID;
     private int score;
     private int energy;
     private int bulletNum;
@@ -84,12 +85,20 @@ public class Player_Server implements GeneralConstants {
         score = s;
     }
     
-    public int getID() {
-        return id;
+    public int getPlayerID() {
+        return pID;
     }
     
-    public void setID(int s) {
-        id = s;
+    public int getObjectID() {
+        return oID;
+    }
+    
+    public void setPlayerID(int s) {
+        pID = s;
+    }
+    
+    public void setObjectID(int s) {
+        oID = s;
     }
     
     public Body getBody() {

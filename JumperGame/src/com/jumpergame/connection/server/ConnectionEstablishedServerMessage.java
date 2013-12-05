@@ -23,19 +23,24 @@ public class ConnectionEstablishedServerMessage extends ServerMessage implements
     // ===========================================================
     // Fields
     // ===========================================================
-
+    
+    public int pID;
+    
     // ===========================================================
     // Constructors
     // ===========================================================
 
     public ConnectionEstablishedServerMessage() {
-
     }
 
     // ===========================================================
     // Getter & Setter
     // ===========================================================
 
+    public void setID(final int id) {
+        pID = id;
+    }
+    
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -47,12 +52,12 @@ public class ConnectionEstablishedServerMessage extends ServerMessage implements
 
     @Override
     protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-        /* Nothing to read. */
+        pID = pDataInputStream.readInt();
     }
 
     @Override
     protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-        /* Nothing to write. */
+        pDataOutputStream.writeInt(pID);
     }
 
     // ===========================================================

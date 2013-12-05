@@ -161,7 +161,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	private void createAttackItem(final float x, final float y, final ItemType type, final int price, final ITextureRegion itemTextureRegion)
 	{	
-		StoreItem item= new StoreItem(this, x, y, type, price, itemTextureRegion, vbom)
+		StoreItem item= new StoreItem(this, x, y, type, price, itemTextureRegion, vbom, false)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -176,7 +176,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        		if(getItemAmount() > 0 )
 			        	{
 			        		currentDragItem = this;
-				        	dragItem = new Item(gc, x, y, type, itemTextureRegion, vbom);
+				        	dragItem = new Item(gc, x, y, type, itemTextureRegion, vbom, false);
 				            gameHUD.attachChild(dragItem);
 			        	}		        	
 		        	}
@@ -195,7 +195,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	private void createEffectItem(final float x, final float y, final ItemType type,final int p, final ITextureRegion itemTextureRegion)
 	{	
-		StoreItem item= new StoreItem(this, x, y, type, p, itemTextureRegion, vbom)
+		StoreItem item= new StoreItem(this, x, y, type, p, itemTextureRegion, vbom, false)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -227,7 +227,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	private void createStoreButton(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
 	{	
-		Item item= new Item(this, x, y, type, itemTextureRegion, vbom)
+		Item item= new Item(this, x, y, type, itemTextureRegion, vbom, false)
 		{
 			 @Override
 		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -288,7 +288,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         createPhysics();
         gameHUD = new HUD();
         loadItem();
-        loadLevel(1);
+        loadLevel(2);
         createInfoHUD();
         camera.setHUD(gameHUD);
         
@@ -325,7 +325,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         final Rectangle right = new Rectangle(480 - 5, 800*5, 10, 800*10, vbom);
         ff=new ArrayList<ArrayList<Fixture>>();
         mPlayers = new ArrayList<Player>();
-        PhysicsFactory.createBoxBody(physicsWorld, ground, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF).setUserData(new Sprite_Body(ground, "Wall"));
+        PhysicsFactory.createBoxBody(physicsWorld, ground, BodyType.StaticBody, GROUND_FIXTURE_DEF).setUserData(new Sprite_Body(ground, "Wall"));
         PhysicsFactory.createBoxBody(physicsWorld, left, BodyType.StaticBody, WALL_FIXTURE_DEF).setUserData(new Sprite_Body(left, "Wall"));
         PhysicsFactory.createBoxBody(physicsWorld, right, BodyType.StaticBody, WALL_FIXTURE_DEF).setUserData(new Sprite_Body(right, "Wall"));
         attachChild(ground);
@@ -363,43 +363,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 
                 if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
                 {
-                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom)
-                    {
-                        
-                        @Override
-                        protected void onManagedUpdate(float pSecondsElapsed) 
-                        {
-                            super.onManagedUpdate(pSecondsElapsed);
-                        //    System.out.println("bbbb");
-                         //   System.out.println(ff.size());
-                            if(player.returnBody().getLinearVelocity().y > 0 )
-                            {
-                                System.out.println(":)))");
-                                for(int k=0; k<ff.size();k++)
-                                {
-                                    ArrayList<Fixture> f=ff.get(k);
-                                Filter fil=f.get(0).getFilterData();
-                                fil.categoryBits=CATEGORYBIT_WALL;
-                                fil.maskBits=MASKBITS_WALL2;
-                                f.get(0).setFilterData(fil);
-                                }
-                            }
-                            else
-                            {
-//                                System.out.println(":(((");
-                                for(int k=0; k<ff.size();k++)
-                                {
-                                    ArrayList<Fixture> f=ff.get(k);
-                                Filter fil=f.get(0).getFilterData();
-                            fil.categoryBits=CATEGORYBIT_WALL;
-                            fil.maskBits=MASKBITS_WALL;
-                            f.get(0).setFilterData(fil);
-                                }
-                            }
-                        }                       
-                    };
-                    System.out.println("aaaa");
-                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, GROUND_AND_STAIR2_FIXTURE_DEF);
+
+                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
+
+                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, STAIR_FIXTURE_DEF);
+
                     body.setUserData(new Sprite_Body(levelObject, "Wall"));
                     
                     ff.add( body.getFixtureList()) ;
@@ -460,6 +428,24 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     player = new Player(x, y, vbom, camera, physicsWorld,"thisPlayer",1, resourcesManager.player1_region)
                     {
                         @Override
+                        protected void onManagedUpdate(float pSecondsElapsed) 
+                        {
+                            super.onManagedUpdate(pSecondsElapsed);
+                            
+                            Body pBody = player.returnBody();
+                            Filter fil = pBody.getFixtureList().get(0).getFilterData();
+                            if (pBody.getLinearVelocity().y > 0) {
+                                fil.categoryBits = CATEGORYBIT_PLAYER;
+                                fil.maskBits = MASKBITS_PLAYER_IGNORE_LADDER;
+                            }
+                            else {
+                                fil.categoryBits = CATEGORYBIT_PLAYER;
+                                fil.maskBits = MASKBITS_PLAYER;
+                            }
+                            pBody.getFixtureList().get(0).setFilterData(fil);
+                        }     
+                        
+                        @Override
                         public void onDie()
                         {
                             // TODO Latter we will handle it.
@@ -491,7 +477,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             }
 
             private Sprite createFloatingItem( int x, int y, final ItemType type, ITextureRegion region) {
-                Sprite object = new Item(gc, x, y, type, region, vbom)
+                Sprite object = new Item(gc, x, y, type, region, vbom, false)
                 {
                      @Override
                      protected void onManagedUpdate(float pSecondsElapsed) 
@@ -553,7 +539,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        	}
 		        	else
 		        	{
-		        		BulletItem bullet = new BulletItem(gc, physicsWorld, this.getX(), this.getY(), ItemType.BULLET, resourcesManager.normal_bullet_region, vbom);
+		        		BulletItem bullet = new BulletItem(gc, physicsWorld, this.getX(), this.getY(), ItemType.BULLET, resourcesManager.normal_bullet_region, vbom, false);
 		        		bullet.shoot();
 		        	}
 		        }
@@ -595,7 +581,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
 	                    if (deltaX < 10.0 && deltaY < 10.0) {
 	                    	BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
-	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom);
+	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom, false);
 	                    	bullet.shoot();
 	                    } else {
 	                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());

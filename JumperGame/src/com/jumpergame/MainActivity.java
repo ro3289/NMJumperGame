@@ -35,14 +35,17 @@ import android.widget.Toast;
 
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
+import com.jumpergame.Scene.MultiplayerGameScene;
 import com.jumpergame.connection.client.ConnectionEstablishClientMessage;
 import com.jumpergame.connection.server.AddObjectServerMessage;
+import com.jumpergame.connection.server.AddPlayerServerMessage;
 import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
 import com.jumpergame.connection.server.ConnectionMainServerMessage;
 import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
 import com.jumpergame.connection.server.UpdateObjectServerMessage;
+import com.jumpergame.connection.server.UpdatePlayerServerMessage;
 import com.jumpergame.connection.server.UpdateScoreServerMessage;
 import com.jumpergame.constant.ConnectionConstants;
 import com.jumpergame.constant.GeneralConstants;
@@ -50,12 +53,11 @@ import com.jumpergame.constant.GeneralConstants;
 public class MainActivity extends BaseGameActivity implements GeneralConstants, ConnectionConstants {
 	private ResourcesManager resourcesManager;
 	private BoundCamera mCamera;
-//	private final float CAMERA_WIDTH  = 480;
-//	private final float CAMERA_HEIGHT = 800;
 	
 	private MainServer mServer;
-	public MainClient mClient;
+//	public MainClient mClient;
 	private String mServerIP = LOCALHOST_IP;
+    protected MainServerConnector mServerConnector;
 	
 	@Override
 	public Engine onCreateEngine(EngineOptions pEngineOptions) 
@@ -113,7 +115,7 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
 	}
 	
 	@Override
-    protected Dialog onCreateDialog(final int pID) {
+    public Dialog onCreateDialog(final int pID) {
         switch(pID) {
             case DIALOG_SHOW_SERVER_IP_ID:
                 try {
@@ -203,13 +205,17 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
             }
             this.mServer.terminate();
         }
-
+        
+        if(this.mServerConnector != null) {
+            this.mServerConnector.terminate();
+        }
+/*
         if (this.mClient != null) {
             if(this.mClient.mServerConnector != null) {
                 this.mClient.mServerConnector.terminate();
             }
-        }
-	    
+  1      }
+*/	    
 		super.onDestroy();
 	    System.exit(0);	
 	}
@@ -244,7 +250,7 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
 
         this.mEngine.registerUpdateHandler(mServer);
     }
-
+/*
     private void initClient() {
         Debug.d("initClient, mServerIP = " + this.mServerIP);
         try {
@@ -256,7 +262,24 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
             Debug.e(t);
         }
     }	
-	
+*/
+    private void initClient() {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    MainActivity.this.mServerConnector = new MainServerConnector(MainActivity.this.mServerIP, new MainServerConnectorListener());
+
+                    MainActivity.this.mServerConnector.getConnection().start();
+                } catch (final Throwable t) {
+                    Debug.e(t);
+                }
+            }
+        };
+        
+        new Thread(r).start();
+    }
+    
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
@@ -290,6 +313,10 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
                 public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
                     Debug.d("CLIENT: Connection established.");
                     System.out.println("Connected!!");
+                    
+                    final ConnectionEstablishedServerMessage connectionEstablishedServerMessage = (ConnectionEstablishedServerMessage) pServerMessage;
+                    final int pID = connectionEstablishedServerMessage.pID;
+                    ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).setPlayerID(pID);
                 }
             });
 
@@ -315,18 +342,16 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
                 }
             });
 
-            this.registerServerMessage(FLAG_MESSAGE_SERVER_ADD_OBJ, AddObjectServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_ADD_PLAYER, AddPlayerServerMessage.class, new IServerMessageHandler<SocketConnection>() {
                 @Override
                 public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-                    final AddObjectServerMessage addObjectServerMessage = (AddObjectServerMessage) pServerMessage;
+                    final AddPlayerServerMessage addPlayerServerMessage = (AddPlayerServerMessage) pServerMessage;
                     System.out.println("Added!!");
-                    /*
-                    MainActivity.this.addPlayer(
-                        addPlayerIDServerMessage.mPlayerID,
-                        addPlayerIDServerMessage.initX, 
-                        addPlayerIDServerMessage.initY
+                    ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).addPlayer(
+                        addPlayerServerMessage.mPlayerID,
+                        addPlayerServerMessage.initX, 
+                        addPlayerServerMessage.initY
                     );
-                    */ // TODO
                 }
             });
 
@@ -338,11 +363,15 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
                 }
             });
 
-            this.registerServerMessage(FLAG_MESSAGE_SERVER_UPDATE_OBJ, UpdateObjectServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER, UpdatePlayerServerMessage.class, new IServerMessageHandler<SocketConnection>() {
                 @Override
                 public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-                    final UpdateObjectServerMessage updateObjectServerMessage = (UpdateObjectServerMessage) pServerMessage;
-//                    MainActivity.this.updateBullet(updateBulletServerMessage.mBulletID, updateBulletServerMessage.mX, updateBulletServerMessage.mY); TODO
+                    final UpdatePlayerServerMessage updateObjectServerMessage = (UpdatePlayerServerMessage) pServerMessage;
+                    ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).updatePlayer(
+                        updateObjectServerMessage.mPlayerID,
+                        updateObjectServerMessage.mX,
+                        updateObjectServerMessage.mY
+                    );
                 }
             });
             
