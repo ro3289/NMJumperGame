@@ -10,10 +10,12 @@ import org.andengine.engine.handler.timer.ITimerCallback;
 import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.ui.IGameInterface.OnCreateSceneCallback;
 
+import com.jumpergame.MainActivity;
 import com.jumpergame.Scene.BaseScene;
 import com.jumpergame.Scene.GameScene;
 import com.jumpergame.Scene.LoadingScene;
 import com.jumpergame.Scene.MainMenuScene;
+import com.jumpergame.Scene.MultiplayerGameScene;
 import com.jumpergame.Scene.SplashScene;
 
 public class SceneManager
@@ -26,6 +28,7 @@ public class SceneManager
     private BaseScene menuScene;
     private BaseScene gameScene;
     private BaseScene loadingScene;
+    public BaseScene multiplayerScene;
     
     //---------------------------------------------
     // VARIABLES
@@ -44,6 +47,7 @@ public class SceneManager
         SCENE_SPLASH,
         SCENE_MENU,
         SCENE_GAME,
+        SCENE_MULTI,
         SCENE_LOADING,
     }
     
@@ -74,6 +78,8 @@ public class SceneManager
             case SCENE_LOADING:
                 setScene(loadingScene);
                 break;
+            case SCENE_MULTI:
+                setScene(multiplayerScene);
             default:
                 break;
         }
@@ -154,5 +160,19 @@ public class SceneManager
         }));
     }
     
-    
+    public void loadMultiPlayerScene(final Engine mEngine)
+    {
+        setScene(loadingScene);
+        ResourcesManager.getInstance().unloadMenuTextures();
+        mEngine.registerUpdateHandler(new TimerHandler(0.1f, new ITimerCallback() 
+        {
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                mEngine.unregisterUpdateHandler(pTimerHandler);
+                ResourcesManager.getInstance().loadGameResources();
+                gameScene = new MultiplayerGameScene();
+                setScene(multiplayerScene);
+            }
+        }));
+    }
 }

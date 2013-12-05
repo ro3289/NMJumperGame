@@ -297,4 +297,9 @@ public class ResourcesManager {
         // TODO (Since we did not create any textures for game scene yet)
     }
 
+    public MainActivity getActivity() {
+        // TODO Auto-generated method stub
+        return activity;
+    }
+
 }

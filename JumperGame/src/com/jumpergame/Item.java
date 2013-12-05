@@ -6,9 +6,26 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Scene.GameScene;
-import com.jumpergame.Scene.GameScene.ItemType;
 
-public class Item extends Sprite{
+public class Item extends Sprite {
+    
+    public enum ItemType
+    {
+        // Money
+        COIN,
+        // Bullet
+        BULLET,
+        // Attack items
+        ACID,
+        GLUE,
+        TOOL,
+        // Self items
+        ENERGY_DRINK,
+        INVISIBLE_DRINK,
+        INVINCIBLE_DRINK,
+        // Buy button
+        BUY_BUTTON;
+    }
 	
 	protected GameScene 				gameScene;
 	protected static ResourcesManager 	resourcesManager;

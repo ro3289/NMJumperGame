@@ -9,9 +9,8 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.align.HorizontalAlign;
 
 import com.jumpergame.Scene.GameScene;
-import com.jumpergame.Scene.GameScene.ItemType;
 
-public class StoreItem extends Item{
+public class StoreItem extends Item {
 	
 	protected int  	itemPrice;
 	private   Text 	itemPriceText;
