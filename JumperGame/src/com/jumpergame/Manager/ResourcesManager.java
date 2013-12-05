@@ -43,7 +43,7 @@ public class ResourcesManager {
   	public ITextureRegion splash_region;
   	private BitmapTextureAtlas splashTextureAtlas;
     
-  	// Menu Texture
+  	// Menu Texture Atlas
   	private BuildableBitmapTextureAtlas menuTextureAtlas;
   	
   	// Menu Texture Regions
@@ -51,10 +51,19 @@ public class ResourcesManager {
     public ITextureRegion play_region;
     public ITextureRegion options_region;
     
-   // Game Texture
+   // Game Texture Atlas
     public BuildableBitmapTextureAtlas gameTextureAtlas;
         
-    // Game Texture Regions
+    // Background Texture Regions
+    public BuildableBitmapTextureAtlas background1TextureAtlas;
+    public BuildableBitmapTextureAtlas background2TextureAtlas;
+    public BuildableBitmapTextureAtlas background3TextureAtlas;
+    public BuildableBitmapTextureAtlas background4TextureAtlas;
+    public ITextureRegion background1_region;
+    public ITextureRegion background2_region;
+    public ITextureRegion background3_region;
+    public ITextureRegion background4_region;
+    
     public ITextureRegion platform1_region;
     public ITextureRegion platform2_region;
     public ITextureRegion platform3_region;
@@ -75,7 +84,8 @@ public class ResourcesManager {
     public ITextureRegion glue_bullet_region;
     
     // Player TextureRegion
-    public ITiledTextureRegion player_region;
+    public ITiledTextureRegion  player_region;
+    public ITextureRegion 		energy_bar_region;
   	
   	// Font
   	public Font font;
@@ -140,16 +150,28 @@ public class ResourcesManager {
         FontFactory.setAssetBasePath("font/");
         final ITexture mainFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 
-        font = FontFactory.createStrokeFromAsset(activity.getFontManager(), mainFontTexture, activity.getAssets(), "font.ttf", 50, true, 100, 5, 50);
+        font = FontFactory.createStrokeFromAsset(activity.getFontManager(), mainFontTexture, activity.getAssets(), "The_Rainmaker.otf", 50, true, 100, 5, 50);
         font.load();
     }
 
     private void loadGameGraphics()
     {
     	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/game/");
-        gameTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
+        gameTextureAtlas 		= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
+        background1TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background2TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background3TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background4TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
         
-        // Load stair texture
+        
+        // Load Background Texture
+        background1_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background1TextureAtlas, activity, "background.png");
+        background2_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background2TextureAtlas, activity, "background2.png");
+        background3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background3TextureAtlas, activity, "background1.png");
+        background4_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background4TextureAtlas, activity, "background2.png");
+
+        
+        // Load staircase texture
         platform1_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform1.png");
         platform2_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform2.png");
         platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
@@ -170,16 +192,25 @@ public class ResourcesManager {
         normal_bullet_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "normal_bullet.png");
         
         // Load player texture
-        player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
+        player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player1.png", 8, 1);
+        energy_bar_region    = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "energy_bar.png");
         
         // Load jump direction texture
-        mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "up_arrow.jpg");
+        mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "up_arrow.png");
         
         System.out.println("2");
         try 
         {
             this.gameTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
             this.gameTextureAtlas.load();
+            this.background1TextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
+            this.background1TextureAtlas.load();
+            this.background2TextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
+            this.background2TextureAtlas.load();
+            this.background3TextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
+            this.background3TextureAtlas.load();
+            this.background4TextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
+            this.background4TextureAtlas.load();
 
         } 
         catch (final TextureAtlasBuilderException e)
@@ -193,15 +224,15 @@ public class ResourcesManager {
     	FontFactory.setAssetBasePath("font/");
     	
     	final ITexture scoreFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
-        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "LCD.ttf", 27, true, Color.WHITE);
+        mScoreFont = FontFactory.createFromAsset(activity.getFontManager(), scoreFontTexture, activity.getAssets(), "Tabaquera.ttf", 36, true, Color.BLACK);
         mScoreFont.load();
         
         final ITexture priceFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
-        mPriceFont = FontFactory.createFromAsset(activity.getFontManager(), priceFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
+        mPriceFont = FontFactory.createFromAsset(activity.getFontManager(), priceFontTexture, activity.getAssets(), "Erasaur.otf", 17, true, Color.BLACK);
         mPriceFont.load();
         
         final ITexture itemAmountFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
-        mItemAmountFont = FontFactory.createFromAsset(activity.getFontManager(), itemAmountFontTexture, activity.getAssets(), "LCD.ttf", 15, true, Color.BLACK);
+        mItemAmountFont = FontFactory.createFromAsset(activity.getFontManager(), itemAmountFontTexture, activity.getAssets(), "Erasaur.otf", 17, true, Color.BLACK);
         mItemAmountFont.load();
         
     }

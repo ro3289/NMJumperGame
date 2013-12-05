@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.LoopEntityModifier;
@@ -13,7 +14,6 @@ import org.andengine.entity.scene.IOnAreaTouchListener;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.ITouchArea;
 import org.andengine.entity.scene.Scene;
-import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
@@ -26,7 +26,6 @@ import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.opengl.texture.region.ITextureRegion;
-import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.SAXUtils;
 import org.andengine.util.adt.align.HorizontalAlign;
 import org.andengine.util.level.EntityLoader;
@@ -36,7 +35,6 @@ import org.andengine.util.level.simple.SimpleLevelLoader;
 import org.andengine.util.math.MathUtils;
 import org.xml.sax.Attributes;
 
-import android.graphics.Color;
 import android.hardware.SensorManager;
 import android.util.SparseArray;
 
@@ -61,8 +59,11 @@ import com.jumpergame.constant.GeneralConstants;
 
 public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
 {
-	public HUD gameHUD;
+
 	private final GameScene gc = this;
+
+	// Background & HUD
+	public HUD gameHUD;
 	
 	// Score
 	private SparseArray<Text> mScoreTextMap;
@@ -70,7 +71,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private Text moneyText;
 	
 	//energy
-	private ArrayList<Rectangle> mPlayerEnergies;
+	private ArrayList<Sprite> mPlayerEnergies;
 	//bullets
 	private final HashMap<Integer, Rectangle> mBullets = new HashMap<Integer, Rectangle>();
 	
@@ -78,6 +79,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     private Vector2 initVector;
     private Vector2 endVector;
     private boolean jumpState = false;
+    private boolean initJumpState = false;
 	
 	// Physics 
 	private PhysicsWorld physicsWorld;
@@ -148,7 +150,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private void createInfoHUD()
 	{
 		mScoreTextMap = new SparseArray<Text>();
-		mPlayerEnergies = new ArrayList<Rectangle>();
+		mPlayerEnergies = new ArrayList<Sprite>();
 		System.out.println("3");
 
 		// Set Score 
@@ -173,9 +175,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         System.out.println("3");
         int i = 0;
         for (Player p : mPlayers) {
-            Rectangle energy = new Rectangle(ENERGY_BAR_POS_X, ENERGY_BAR_POS_Y-ENERGY_BAR_POS_Y_GAP*i, p.getEnergy(), ENERGY_BAR_HEIGHT, vbom);
+            Sprite energy = new Sprite(ENERGY_BAR_POS_X - 10, ENERGY_BAR_POS_Y-ENERGY_BAR_POS_Y_GAP*i - 10 , resourcesManager.energy_bar_region, vbom);
             energy.setAnchorCenterX(0);
-            energy.setColor(Color.RED);
+            energy.setAlpha(0.8f);
             mPlayerEnergies.add(energy);
             gameHUD.attachChild(energy);
             
@@ -187,7 +189,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	// Item System
 	private void loadItem() {
 		itemMap = new HashMap<ItemType, StoreItem>();
-		createStoreButton(30, 50, ItemType.BUY_BUTTON, resourcesManager.button_region);
+		createStoreButton(35, 50, ItemType.BUY_BUTTON, resourcesManager.button_region);
 		createAttackItem(90,  50, ItemType.ACID, 300, resourcesManager.acid_region);
 		createAttackItem(160, 50, ItemType.GLUE, 500, resourcesManager.glue_region);
 		createAttackItem(230, 50, ItemType.TOOL, 800, resourcesManager.tool_region);
@@ -217,6 +219,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 			        	}		        	
 		        	}
 		        }
+		        else if (pSceneTouchEvent.isActionUp() && initJumpState)
+		        {
+		        	refreshArrow();
+		        }
 		        return true;
 		    };
 			    
@@ -244,6 +250,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        		}
 		        	}
 		        }
+		        else if (pSceneTouchEvent.isActionUp() && initJumpState)
+		        {
+		        	refreshArrow();
+		        }
+		        
 		        return true;
 		    };
 			    
@@ -276,6 +287,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        		
 		        	}
 		        }
+		        else if (pSceneTouchEvent.isActionUp() && initJumpState)
+		        {
+		        	refreshArrow();
+		        }
 		        return true;
 		    };
 			    
@@ -291,7 +306,15 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	
     private void createBackground() {
-    	setBackground(new Background(0.09804f, 0.6274f, 0.8784f));
+    	Sprite background1 = new Sprite(240, 400, resourcesManager.background1_region, vbom);
+    	Sprite background2 = new Sprite(240, 1200, resourcesManager.background2_region, vbom);
+    	Sprite background3 = new Sprite(240, 2000, resourcesManager.background3_region, vbom);
+    	Sprite background4 = new Sprite(240, 2800, resourcesManager.background4_region, vbom);
+    //	SpriteBackground spriteBackground = new SpriteBackground(background);
+    	attachChild(background1);
+    	attachChild(background2);
+    	attachChild(background3);
+    	attachChild(background4);
 	}
 	
     @Override
@@ -440,7 +463,15 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         {
                             // TODO Latter we will handle it.
                         }
-                        
+                        @Override
+            		    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+            		    {
+            		      if (pSceneTouchEvent.isActionUp() && initJumpState)
+            		        {
+            		    	  refreshArrow();
+            		        }
+            		        return true;
+            		    };
                     };
                     // registerTouchArea(player);
                     camera.setChaseEntity(player);
@@ -496,7 +527,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         // Opponent attacked method
 		dummy = new Player(200, 200, vbom, camera, physicsWorld,"dummy",2)
 		{
-
 			@Override
 			public void onDie() {
 				// TODO Auto-generated method stub
@@ -514,6 +544,14 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        	dragItem.dispose();
 		        	dragItem = null;
 		        //	DRAG_ITEM = false;
+		        }
+		        else if (pSceneTouchEvent.isActionUp())
+		        {
+		        	System.out.println("b");
+		        	if(initJumpState)
+		        	{
+		        		refreshArrow();
+		        	}
 		        }
 		        return true;
 		    };
@@ -546,6 +584,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         attachChild(mArrow);
                     }
                 });
+                initJumpState = true;
             }
             else if (pSceneTouchEvent.isActionUp()) {
                 if(!jumpState) {
@@ -554,8 +593,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    // Eject object
 	                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
 	                    final float deltaY = initVector.y - pSceneTouchEvent.getY();
-	                    if (deltaX < 20.0 && deltaY < 20.0) {
-	                        // shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+	                    if (deltaX < 10.0 && deltaY < 10.0) {
 	                    	BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
 	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom);
 	                    	bullet.shoot();
@@ -569,6 +607,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                        Vector2Pool.recycle(velocity);
 	                    // Record initial jump position
 	                        initBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
+	                        initJumpState = false;
 	                        jumpState 	 = true;
 	                    }
                 	}
@@ -833,6 +872,16 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 System.gc();
             }
         });
+    }
+    private void refreshArrow()
+    {
+    	 activity.runOnUpdateThread(new Runnable() {
+             @Override
+             public void run() {
+                 gc.detachChild(mArrow);
+             }
+         });
+		initJumpState = false;
     }
 	@Override
 	public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {

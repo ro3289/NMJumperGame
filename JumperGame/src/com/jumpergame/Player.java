@@ -88,7 +88,7 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
 	 }
 
 	     });*/
-	     animate(new long[]{ 200, 200 }, 0, 1, true);
+	     animate(new long[]{ 100, 100, 100, 100, 100, 100, 100, 100}, 0, 7, true);
 	     setUserData(body);
 	 }
 	 
