@@ -30,8 +30,9 @@ public class Player_Client implements GeneralConstants {
     // Constructors
     // ===========================================================
     
-    public Player_Client(int id) {
+    public Player_Client(AnimatedSprite as, int id) {
         setID(id);
+        setAppearance(as);
 //        ID = id;
 //        appearance = aSprite;
 //        energyBar = eBar;

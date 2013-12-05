@@ -50,12 +50,11 @@ import com.jumpergame.constant.GeneralConstants;
 public class MainActivity extends BaseGameActivity implements GeneralConstants, ConnectionConstants {
 	private ResourcesManager resourcesManager;
 	private BoundCamera mCamera;
-//	private final float CAMERA_WIDTH  = 480;
-//	private final float CAMERA_HEIGHT = 800;
 	
 	private MainServer mServer;
-	public MainClient mClient;
+//	public MainClient mClient;
 	private String mServerIP = LOCALHOST_IP;
+    protected MainServerConnector mServerConnector;
 	
 	@Override
 	public Engine onCreateEngine(EngineOptions pEngineOptions) 
@@ -203,13 +202,17 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
             }
             this.mServer.terminate();
         }
-
+        
+        if(this.mServerConnector != null) {
+            this.mServerConnector.terminate();
+        }
+/*
         if (this.mClient != null) {
             if(this.mClient.mServerConnector != null) {
                 this.mClient.mServerConnector.terminate();
             }
-        }
-	    
+  1      }
+*/	    
 		super.onDestroy();
 	    System.exit(0);	
 	}
@@ -244,7 +247,7 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
 
         this.mEngine.registerUpdateHandler(mServer);
     }
-
+/*
     private void initClient() {
         Debug.d("initClient, mServerIP = " + this.mServerIP);
         try {
@@ -256,7 +259,24 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
             Debug.e(t);
         }
     }	
-	
+*/
+    private void initClient() {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    MainActivity.this.mServerConnector = new MainServerConnector(MainActivity.this.mServerIP, new MainServerConnectorListener());
+
+                    MainActivity.this.mServerConnector.getConnection().start();
+                } catch (final Throwable t) {
+                    Debug.e(t);
+                }
+            }
+        };
+        
+        new Thread(r).start();
+    }
+    
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
