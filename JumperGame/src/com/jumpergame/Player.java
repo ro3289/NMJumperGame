@@ -1,11 +1,8 @@
 package com.jumpergame;
 
-import org.andengine.engine.camera.BoundCamera;
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.handler.timer.ITimerCallback;
 import org.andengine.engine.handler.timer.TimerHandler;
-import org.andengine.entity.modifier.ScaleModifier;
-import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
@@ -16,12 +13,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.jumpergame.Manager.ResourcesManager;
-import com.jumpergame.constant.GeneralConstants;
 import com.jumpergame.body.Sprite_Body;
+import com.jumpergame.constant.GeneralConstants;
 
 public abstract class Player extends AnimatedSprite implements GeneralConstants
 {
-    // ---------------------------------------------
+
+	// ---------------------------------------------
     // CONSTRUCTOR
     // ---------------------------------------------
     
