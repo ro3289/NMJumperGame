@@ -59,10 +59,23 @@ public class ResourcesManager {
     public BuildableBitmapTextureAtlas background2TextureAtlas;
     public BuildableBitmapTextureAtlas background3TextureAtlas;
     public BuildableBitmapTextureAtlas background4TextureAtlas;
+    public BuildableBitmapTextureAtlas background5TextureAtlas;
+    public BuildableBitmapTextureAtlas background6TextureAtlas;
+    public BuildableBitmapTextureAtlas background7TextureAtlas;
+    public BuildableBitmapTextureAtlas background8TextureAtlas;
+    public BuildableBitmapTextureAtlas background9TextureAtlas;
+    public BuildableBitmapTextureAtlas background10TextureAtlas;
     public ITextureRegion background1_region;
     public ITextureRegion background2_region;
     public ITextureRegion background3_region;
     public ITextureRegion background4_region;
+    public ITextureRegion background5_region;
+    public ITextureRegion background6_region;
+    public ITextureRegion background7_region;
+    public ITextureRegion background8_region;
+    public ITextureRegion background9_region;
+    public ITextureRegion background10_region;
+    
     
     public ITextureRegion platform1_region;
     public ITextureRegion platform2_region;
@@ -84,7 +97,8 @@ public class ResourcesManager {
     public ITextureRegion glue_bullet_region;
     
     // Player TextureRegion
-    public ITiledTextureRegion  player_region;
+    public ITiledTextureRegion  player1_region;
+    public ITiledTextureRegion  player2_region;
     public ITextureRegion 		energy_bar_region;
   	
   	// Font
@@ -157,18 +171,30 @@ public class ResourcesManager {
     private void loadGameGraphics()
     {
     	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/game/");
-        gameTextureAtlas 		= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
+        gameTextureAtlas 			= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
         background1TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
         background2TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
         background3TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
         background4TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background5TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background6TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background7TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background8TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background9TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
+        background10TextureAtlas 	= new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
         
         
         // Load Background Texture
-        background1_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background1TextureAtlas, activity, "background.png");
+        background1_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background1TextureAtlas, activity, "background1.png");
         background2_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background2TextureAtlas, activity, "background2.png");
         background3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background3TextureAtlas, activity, "background1.png");
         background4_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background4TextureAtlas, activity, "background2.png");
+        background5_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background5TextureAtlas, activity, "background2.png");
+        background6_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background6TextureAtlas, activity, "background1.png");
+        background7_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background7TextureAtlas, activity, "background2.png");
+        background8_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background8TextureAtlas, activity, "background1.png");
+        background9_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background9TextureAtlas, activity, "background1.png");
+        background10_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(background10TextureAtlas, activity, "background2.png");
 
         
         // Load staircase texture
@@ -192,7 +218,8 @@ public class ResourcesManager {
         normal_bullet_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "normal_bullet.png");
         
         // Load player texture
-        player_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player1.png", 8, 1);
+        player1_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player1.png", 4, 1);
+        player2_region 		= BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player2.png", 8, 1);
         energy_bar_region    = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "energy_bar.png");
         
         // Load jump direction texture

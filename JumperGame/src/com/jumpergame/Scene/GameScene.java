@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.LoopEntityModifier;
@@ -81,6 +80,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     private Vector2 endVector;
     private boolean jumpState = false;
     private boolean initJumpState = false;
+	boolean arrowAttached = false;
 	
 	// Physics 
 	private PhysicsWorld physicsWorld;
@@ -268,15 +268,17 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	}
 	
     private void createBackground() {
-    	Sprite background1 = new Sprite(240, 400, resourcesManager.background1_region, vbom);
-    	Sprite background2 = new Sprite(240, 1200, resourcesManager.background2_region, vbom);
-    	Sprite background3 = new Sprite(240, 2000, resourcesManager.background3_region, vbom);
-    	Sprite background4 = new Sprite(240, 2800, resourcesManager.background4_region, vbom);
     //	SpriteBackground spriteBackground = new SpriteBackground(background);
-    	attachChild(background1);
-    	attachChild(background2);
-    	attachChild(background3);
-    	attachChild(background4);
+    	attachChild(new Sprite(240, 400, resourcesManager.background1_region, vbom));
+    	attachChild(new Sprite(240, 1200, resourcesManager.background2_region, vbom));
+    	attachChild(new Sprite(240, 2000, resourcesManager.background3_region, vbom));
+    	attachChild(new Sprite(240, 2800, resourcesManager.background4_region, vbom));
+    	attachChild(new Sprite(240, 3600, resourcesManager.background5_region, vbom));
+    	attachChild(new Sprite(240, 4400, resourcesManager.background6_region, vbom));
+    	attachChild(new Sprite(240, 5200, resourcesManager.background7_region, vbom));
+    	attachChild(new Sprite(240, 6000, resourcesManager.background8_region, vbom));
+    	attachChild(new Sprite(240, 6800, resourcesManager.background9_region, vbom));
+    	attachChild(new Sprite(240, 7600, resourcesManager.background10_region, vbom));
 	}
 	
     @Override
@@ -455,7 +457,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER))
                 {
-                    player = new Player(x, y, vbom, camera, physicsWorld,"thisPlayer",1)
+                    player = new Player(x, y, vbom, camera, physicsWorld,"thisPlayer",1, resourcesManager.player1_region)
                     {
                         @Override
                         public void onDie()
@@ -524,7 +526,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         mArrow = new Sprite(240, 400, resourcesManager.mDirectionTextureRegion, vbom);
         
         // Opponent attacked method
-		dummy = new Player(200, 200, vbom, camera, physicsWorld,"dummy",2)
+		dummy = new Player(200, 200, vbom, camera, physicsWorld,"dummy",2, resourcesManager.player2_region)
 		{
 			@Override
 			public void onDie() {
@@ -534,22 +536,25 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 			@Override 
             public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
 		    {
-		        if (pSceneTouchEvent.isActionUp() && dragItem != null)
+		        if (pSceneTouchEvent.isActionUp())
 		        {
-		        	System.out.println("Dummy attacked!");
-		        	currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-		        	currentDragItem = null;
-		        	gameHUD.detachChild(dragItem);
-		        	dragItem.dispose();
-		        	dragItem = null;
-		        //	DRAG_ITEM = false;
-		        }
-		        else if (pSceneTouchEvent.isActionUp())
-		        {
-		        	System.out.println("b");
+		        	if( dragItem != null)
+		        	{
+			        	System.out.println("Dummy attacked!");
+			        	currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+			        	currentDragItem = null;
+			        	gameHUD.detachChild(dragItem);
+			        	dragItem.dispose();
+			        	dragItem = null;
+		        	}
 		        	if(initJumpState)
 		        	{
 		        		refreshArrow();
+		        	}
+		        	else
+		        	{
+		        		BulletItem bullet = new BulletItem(gc, physicsWorld, this.getX(), this.getY(), ItemType.BULLET, resourcesManager.normal_bullet_region, vbom);
+		        		bullet.shoot();
 		        	}
 		        }
 		        return true;
@@ -565,7 +570,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     }
     @Override
     public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
-
+    	
         // Convert touch event to camera screen touch event first
         if(dragItem != null){
             camera.convertSceneTouchEventToCameraSceneTouchEvent(pSceneTouchEvent);
@@ -576,17 +581,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 // Record initial position
                 initVector = new Vector2(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
                 // Show Direction
-                mArrow.setPosition(player.getX(), player.getY() +40 );
-                activity.runOnUpdateThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        attachChild(mArrow);
-                    }
-                });
+                mArrow.setPosition(player.getX(), player.getY() +60 );
+                arrowAttached = false;
                 initJumpState = true;
             }
             else if (pSceneTouchEvent.isActionUp()) {
-                if(!jumpState) {
+                if(!jumpState) 
+                {
                 	if(dragItem == null)
                 	{
 	                    // Eject object
@@ -611,26 +612,43 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    }
                 	}
                 }
-                // Item 
-                if(dragItem != null)
-                {
-                    System.out.println("release item!!");
-                    gameHUD.detachChild(dragItem);
-                    dragItem.dispose();
-                    dragItem = null;
-                }
-                // Detach arrow 
-                activity.runOnUpdateThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        detachChild(mArrow);
-                    }
-                });
+	            // Item 
+	            if(dragItem != null)
+	            {
+	                System.out.println("release item!!");
+	                camera.convertCameraSceneTouchEventToSceneTouchEvent(pSceneTouchEvent);
+	                currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+		        	currentDragItem = null;
+		        	gameHUD.detachChild(dragItem);
+		        	dragItem.dispose();
+		        	dragItem = null;
+	            }
+	            // Detach arrow 
+	            if(arrowAttached)
+	            {
+	                activity.runOnUpdateThread(new Runnable() {
+	                    @Override
+	                    public void run() {
+	                        detachChild(mArrow);
+	                        arrowAttached = false;
+	                    }
+	                });
+	            }
                 return true;
             }
             else if(pSceneTouchEvent.isActionMove()) {
                 if(dragItem == null) // Problem here when store items used!!!!!
                 {
+                	if(!arrowAttached)
+                	{
+	                	activity.runOnUpdateThread(new Runnable() {
+	                        @Override
+	                        public void run() {
+	                            attachChild(mArrow);
+	                            arrowAttached = true;
+	                        }
+	                    });
+                	}
                     endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
                     final float dX = endVector.x;
                     final float dY = endVector.y;

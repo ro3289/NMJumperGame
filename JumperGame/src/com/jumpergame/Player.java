@@ -1,33 +1,32 @@
 package com.jumpergame;
 
-import org.andengine.engine.camera.BoundCamera;
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.handler.timer.ITimerCallback;
 import org.andengine.engine.handler.timer.TimerHandler;
-import org.andengine.entity.modifier.ScaleModifier;
-import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.opengl.texture.region.ITiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.jumpergame.Manager.ResourcesManager;
-import com.jumpergame.constant.GeneralConstants;
 import com.jumpergame.body.Sprite_Body;
+import com.jumpergame.constant.GeneralConstants;
 
 public abstract class Player extends AnimatedSprite implements GeneralConstants
 {
-    // ---------------------------------------------
+
+	// ---------------------------------------------
     // CONSTRUCTOR
     // ---------------------------------------------
     
-    public Player(float pX, float pY, VertexBufferObjectManager vbo, Camera camera, PhysicsWorld physicsWorld, String name, int type)
+    public Player(float pX, float pY, VertexBufferObjectManager vbo, Camera camera, PhysicsWorld physicsWorld, String name, int type, ITiledTextureRegion region)
     {
-        super(pX, pY, ResourcesManager.getInstance().player_region, vbo);
+        super(pX, pY, region, vbo);
         userdata=name;
         playerType=type;
         createPhysics(camera, physicsWorld);
@@ -88,7 +87,14 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
      }
 
 	     });*/
-	     animate(new long[]{ 100, 100, 100, 100, 100, 100, 100, 100}, 0, 7, true);
+         if(mTextureRegion == ResourcesManager.getInstance().player1_region)
+         {
+        	 animate(new long[]{ 100, 100, 100, 100}, 0, 3, true);
+         }
+         if(mTextureRegion == ResourcesManager.getInstance().player2_region)
+         {
+        	 animate(new long[]{ 100, 100, 100, 100, 100, 100, 100, 100}, 0, 7, true);
+         }
 	     setUserData(body);
 	 }
 	 
