@@ -16,6 +16,7 @@ public class Item extends Sprite {
         COIN,
         // Bullet
         BULLET,
+        CROWN,
         // Attack items
         ACID,
         GLUE,

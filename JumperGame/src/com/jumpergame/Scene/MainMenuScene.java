@@ -22,7 +22,7 @@ public class MainMenuScene extends BaseScene implements IOnMenuItemClickListener
 	public void createScene() {
 		createBackground();
 		createMenuChildScene();
-		
+		resourcesManager.mMenu.play();
 	}
 
 	@Override
@@ -39,6 +39,7 @@ public class MainMenuScene extends BaseScene implements IOnMenuItemClickListener
 	@Override
 	public void disposeScene() {
 		camera.setChaseEntity(null);
+		resourcesManager.mMenu.pause();
 	}
 	
 	// Method
@@ -85,8 +86,11 @@ public class MainMenuScene extends BaseScene implements IOnMenuItemClickListener
 		switch(pMenuItem.getID())
         {
         case MENU_PLAY:
-//        	SceneManager.getInstance().loadGameScene(engine);
-            SceneManager.getInstance().loadMultiPlayerScene(engine);
+
+        	SceneManager.getInstance().loadMultiPlayerScene(engine);
+
+        	resourcesManager.mMenu.pause();
+
             return true;
         case MENU_OPTIONS:
             return true;

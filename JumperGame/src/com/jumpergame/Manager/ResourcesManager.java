@@ -1,8 +1,14 @@
 package com.jumpergame.Manager;
 
+import java.io.IOException;
+import java.util.HashMap;
+
+import org.andengine.audio.music.Music;
+import org.andengine.audio.music.MusicFactory;
+import org.andengine.audio.sound.Sound;
+import org.andengine.audio.sound.SoundFactory;
 import org.andengine.engine.Engine;
 import org.andengine.engine.camera.BoundCamera;
-import org.andengine.engine.camera.Camera;
 import org.andengine.opengl.font.Font;
 import org.andengine.opengl.font.FontFactory;
 import org.andengine.opengl.texture.ITexture;
@@ -15,13 +21,13 @@ import org.andengine.opengl.texture.atlas.buildable.builder.BlackPawnTextureAtla
 import org.andengine.opengl.texture.atlas.buildable.builder.ITextureAtlasBuilder.TextureAtlasBuilderException;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.ITiledTextureRegion;
-import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.debug.Debug;
 
 import android.graphics.Color;
 
 import com.jumpergame.MainActivity;
+import com.jumpergame.users;
 
 public class ResourcesManager {
 	//---------------------------------------------
@@ -100,6 +106,8 @@ public class ResourcesManager {
     public ITiledTextureRegion  player1_region;
     public ITiledTextureRegion  player2_region;
     public ITextureRegion 		energy_bar_region;
+    
+    public ITextureRegion 		crown_region;
   	
   	// Font
   	public Font font;
@@ -111,6 +119,16 @@ public class ResourcesManager {
   	public BuildableBitmapTextureAtlas mDirectionTextureAtlas;
     public ITextureRegion mDirectionTextureRegion;
 
+    public Music mMusic;
+    public Music mMenu;
+    public Sound mShoot;
+    public Sound mDie;
+    
+//Ranking
+    
+    public HashMap<String,users> userList;
+    public ITextureRegion ranking_region;
+    public String thisUser;
 
     
     //---------------------------------------------
@@ -155,7 +173,14 @@ public class ResourcesManager {
     
     private void loadMenuAudio()
     {
-        
+    	MusicFactory.setAssetBasePath("mfx/");
+		try {
+			mMenu = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "menu.mp3");
+			mMenu.setLooping(true);
+			
+		} catch (final IOException e) {
+			Debug.e(e);
+		}
     }
 
     private void loadMenuFonts()
@@ -225,6 +250,17 @@ public class ResourcesManager {
         // Load jump direction texture
         mDirectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "up_arrow.png");
         
+     // Load crown texture
+        crown_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "crown.png");
+        
+     // Load ranking texture
+        thisUser="Jane";
+        userList=new HashMap<String, users>();
+        userList.put(thisUser,new users("Jane",0));
+        userList.put("YLC",new users("YLC",100));
+               
+        ranking_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "g3.png");
+        
         System.out.println("2");
         try 
         {
@@ -266,7 +302,21 @@ public class ResourcesManager {
     
     private void loadGameAudio()
     {
-        
+    	MusicFactory.setAssetBasePath("mfx/");
+		try {
+			mMusic = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "Mega Man 8- Tengu Man's Stage.mp3");
+			mMusic.setLooping(true);
+			
+		} catch (final IOException e) {
+			Debug.e(e);
+		}
+		SoundFactory.setAssetBasePath("mfx/");
+		try {
+			mShoot = SoundFactory.createSoundFromAsset(engine.getSoundManager(), activity, "shoot.wav");
+			mDie = SoundFactory.createSoundFromAsset(engine.getSoundManager(), activity, "die.wav");
+		} catch (final IOException e) {
+			Debug.e(e);
+		}
     }
     
     public void loadSplashScreen()
