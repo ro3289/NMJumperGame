@@ -1,5 +1,6 @@
 package com.jumpergame;
 
+import org.andengine.entity.scene.Scene;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
@@ -27,16 +28,18 @@ public class Item extends Sprite {
         BUY_BUTTON;
     }
 	
-	protected GameScene 				gameScene;
+	protected Scene 				    gameScene;
 	protected static ResourcesManager 	resourcesManager;
 	protected ItemType 					itemType;
+	protected boolean                   isOnline;
 
-	public Item(GameScene gc, float pX, float pY, ItemType type, ITextureRegion pTextureRegion,
-			VertexBufferObjectManager pVertexBufferObjectManager) {
+	public Item(Scene gc, float pX, float pY, ItemType type, ITextureRegion pTextureRegion,
+			VertexBufferObjectManager pVertexBufferObjectManager, boolean online) {
 		super(pX, pY, pTextureRegion, pVertexBufferObjectManager);
 		setType(type);
 		resourcesManager = ResourcesManager.getInstance();
 		gameScene = gc;
+		isOnline = online;
 	}
 
 	public void setType(ItemType type){

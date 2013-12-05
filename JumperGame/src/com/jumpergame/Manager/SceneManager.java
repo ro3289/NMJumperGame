@@ -132,7 +132,11 @@ public class SceneManager
     public void loadMenuScene(final Engine mEngine)
     {
         setScene(loadingScene);
-        gameScene.disposeScene();
+        if (gameScene != null) {
+            gameScene.disposeScene();
+        } else {
+            multiplayerScene.disposeScene();
+        }
         ResourcesManager.getInstance().unloadGameTextures();
         mEngine.registerUpdateHandler(new TimerHandler(0.1f, new ITimerCallback() 
         {
@@ -170,7 +174,7 @@ public class SceneManager
             {
                 mEngine.unregisterUpdateHandler(pTimerHandler);
                 ResourcesManager.getInstance().loadGameResources();
-                gameScene = new MultiplayerGameScene();
+                multiplayerScene = new MultiplayerGameScene();
                 setScene(multiplayerScene);
             }
         }));
