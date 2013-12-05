@@ -60,6 +60,7 @@ public interface GeneralConstants {
     public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE        = "glue";
     public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL        = "tool";
     public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY      = "energy";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_CROWN  	   = "crown";
     public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE   = "invisible";
     public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE  = "invincible";
     

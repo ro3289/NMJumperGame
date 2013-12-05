@@ -52,6 +52,7 @@ import com.jumpergame.Item;
 import com.jumpergame.Item.ItemType;
 import com.jumpergame.Player;
 import com.jumpergame.StoreItem;
+import com.jumpergame.rankingSprite;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
 import com.jumpergame.body.Sprite_Body;
@@ -108,6 +109,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	private boolean buyItem = false;
 	
 	private ArrayList<ArrayList<Fixture>> ff;
+	
+	private rankingSprite rank;
 	
 	private void createInfoHUD()
 	{
@@ -291,6 +294,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         loadLevel(1);
         createInfoHUD();
         camera.setHUD(gameHUD);
+        resourcesManager.mMusic.play();
+        rank=new rankingSprite(vbom);
         
         setOnSceneTouchListener(this);
         setOnAreaTouchListener(this);
@@ -313,7 +318,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     {
         camera.setHUD(null);
         camera.setCenter(240, 400);
-
+        resourcesManager.mMusic.pause();
+        resourcesManager.mMenu.play();
         // TODO code responsible for disposing scene
         // removing all game scene objects.
     }
@@ -480,6 +486,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     mPlayers.add(player);
                     levelObject = player;
                 }
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_CROWN))
+                {
+                	levelObject = createFloatingItem( x, y, ItemType.CROWN, resourcesManager.crown_region);
+                	levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
                 else
                 {
                     throw new IllegalArgumentException();
@@ -503,6 +514,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                              if(type == ItemType.COIN)
                              {
                                  gc.plusPlayerMoney(500);
+                             }
+                             else if(type == ItemType.CROWN)
+                             {
+                            	 
+                            	 rank.display(gc,camera);
                              }
                              else
                              {
@@ -555,6 +571,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        	{
 		        		BulletItem bullet = new BulletItem(gc, physicsWorld, this.getX(), this.getY(), ItemType.BULLET, resourcesManager.normal_bullet_region, vbom);
 		        		bullet.shoot();
+		        		
 		        	}
 		        }
 		        return true;
@@ -597,6 +614,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    	BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
 	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom);
 	                    	bullet.shoot();
+	                    	
 	                    } else {
 	                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
 	                        final float velocityX = endVector.x;
@@ -655,7 +673,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     final float angle = (float) Math.atan2( dX, dY);
                     final float rotation = MathUtils.radToDeg(angle);
                     mArrow.setRotation(rotation);
-                }
+                }               
                 else
                 {   
                     dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
@@ -793,6 +811,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     public void updateScore(final int userID, final int deltaPoints) {
         final Text score = this.mScoreTextMap.get(userID);
         score.setText("Score: " + String.valueOf(deltaPoints));
+        resourcesManager.userList.get(resourcesManager.thisUser).setScore(player.getScore());
     }
     
     // ===========================================================
@@ -806,6 +825,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         int originalEnergy = player1.getEnergy();
         int newEnergy = originalEnergy + deltaEnergy;
         if (newEnergy <= 0) {
+        	resourcesManager.mDie.play();
             player1.setEnergy(FULL_ENERGY);
             int player2NewScore = player2.getScore() + 1000;
             player2.setScore(player2NewScore);

@@ -67,6 +67,10 @@ public class BulletItem extends Item {
 	public void shoot() {
         gameScene.attachChild(this);
         bulletBody.setLinearVelocity(bulletVelocity());
+    
+		resourcesManager.mShoot.play();
+
+        
     }
 	
 	private Vector2 bulletVelocity() {
