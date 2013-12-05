@@ -386,7 +386,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                             }
                             else
                             {
-                                System.out.println(":(((");
+//                                System.out.println(":(((");
                                 for(int k=0; k<ff.size();k++)
                                 {
                                     ArrayList<Fixture> f=ff.get(k);

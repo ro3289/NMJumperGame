@@ -76,6 +76,7 @@
 	<entity x="349" y="7700" type="platform1"/>
 	<entity x="161" y="7800" type="platform1"/>
 	<entity x="340" y="7900" type="platform1"/>
+	<entity x="131" y="100" type="player"/>
 	<entity x="100" y="580" type="coin"/>
     <entity x="100" y="450" type="coin"/>
     <entity x="200" y="450" type="coin"/>

@@ -7,8 +7,8 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 public interface GeneralConstants {
     public static final int FPS = 30;
     
-    public static final int GAME_WIDTH = 800;
-    public static final int GAME_HEIGHT = 480;
+    public static final int GAME_WIDTH = 480;
+    public static final int GAME_HEIGHT = 800;
     public static final int CAMERA_WIDTH = GAME_WIDTH;
     public static final int CAMERA_HEIGHT = GAME_HEIGHT;
     
