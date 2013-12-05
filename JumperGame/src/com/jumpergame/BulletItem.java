@@ -80,25 +80,22 @@ public class BulletItem extends Item {
         float v = (float) java.lang.Math.pow(java.lang.Math.pow(delX, 2) + java.lang.Math.pow(delY, 2), 0.5);
         return new Vector2(velocityConstant * delX / v, velocityConstant * delY / v);
     }
-	public void showBulletEffect() {         	 
-	    switch (itemType) {
-            case BULLET:
-                if (!isOnline) {
-                    ((GameScene)gameScene).setPlayerEnergy(1,0,-10);
-                    break;
-                }
-            case ACID:
-                if (!isOnline) {
-                    ((GameScene)gameScene).setPlayerEnergy(1,0,-50);
-                    break;
-                }
-            case GLUE:
-                if (!isOnline) {
-                    ((GameScene)gameScene).getOpponent().slowDownEffect();
-                    break;
-                }
-            default:
-                break;
+	public void showBulletEffect() {
+	    if (!isOnline) {
+	        switch (itemType)
+	        {
+	                case BULLET:
+	                    ((GameScene)gameScene).setPlayerEnergy(1,0,-10);
+	                    break;
+	           case ACID:
+	               ((GameScene)gameScene).setPlayerEnergy(1,0,-50);
+	                    break;
+	           case GLUE:
+	               ((GameScene)gameScene).getOpponent().slowDownEffect();
+	                    break;
+	           default:
+	                   break;
+	        }
 	    }
 	}
 }

@@ -288,7 +288,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         createPhysics();
         gameHUD = new HUD();
         loadItem();
-        loadLevel(1);
+        loadLevel(2);
         createInfoHUD();
         camera.setHUD(gameHUD);
         
@@ -363,26 +363,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 
                 if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
                 {
-                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom)
-                    {
-                        
-                        @Override
-                        protected void onManagedUpdate(float pSecondsElapsed) 
-                        {
-                            super.onManagedUpdate(pSecondsElapsed);
-                            
-                            Body pBody = player.returnBody();
-                            Filter fil = pBody.getFixtureList().get(0).getFilterData();
-                            if (pBody.getLinearVelocity().y > 0) {
-                                fil.maskBits = MASKBITS_PLAYER_IGNORE_LADDER;
-                            }
-                            else {
-                                fil.maskBits = MASKBITS_PLAYER;
-                            }
-                            pBody.getFixtureList().get(0).setFilterData(fil);
-                        }                       
-                    };
-                    System.out.println("aaaa");
+                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
+
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, STAIR_FIXTURE_DEF);
                     body.setUserData(new Sprite_Body(levelObject, "Wall"));
                     
@@ -443,6 +425,24 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 {
                     player = new Player(x, y, vbom, camera, physicsWorld,"thisPlayer",1, resourcesManager.player1_region)
                     {
+                        @Override
+                        protected void onManagedUpdate(float pSecondsElapsed) 
+                        {
+                            super.onManagedUpdate(pSecondsElapsed);
+                            
+                            Body pBody = player.returnBody();
+                            Filter fil = pBody.getFixtureList().get(0).getFilterData();
+                            if (pBody.getLinearVelocity().y > 0) {
+                                fil.categoryBits = CATEGORYBIT_PLAYER;
+                                fil.maskBits = MASKBITS_PLAYER_IGNORE_LADDER;
+                            }
+                            else {
+                                fil.categoryBits = CATEGORYBIT_PLAYER;
+                                fil.maskBits = MASKBITS_PLAYER;
+                            }
+                            pBody.getFixtureList().get(0).setFilterData(fil);
+                        }     
+                        
                         @Override
                         public void onDie()
                         {

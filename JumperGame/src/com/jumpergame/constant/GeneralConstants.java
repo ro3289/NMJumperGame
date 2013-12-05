@@ -85,7 +85,7 @@ public interface GeneralConstants {
     
     public static final FixtureDef WALL_FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.5f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);
     public static final FixtureDef GROUND_FIXTURE_DEF = PhysicsFactory.createFixtureDef(2, 0f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);
-    public static final FixtureDef STAIR_FIXTURE_DEF = PhysicsFactory.createFixtureDef(2, 0f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);
+    public static final FixtureDef STAIR_FIXTURE_DEF = PhysicsFactory.createFixtureDef(2, 0f, 0.5f, false, CATEGORYBIT_STAIR, MASKBITS_WALL, (short)0);
     public static final FixtureDef PLAYER_FIXTURE_DEF = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f, false, CATEGORYBIT_PLAYER, MASKBITS_PLAYER, (short)0);
     public static final FixtureDef PLAYER_IGNORE_STAIR_FIXTURE_DEF = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f, false, CATEGORYBIT_PLAYER, MASKBITS_PLAYER_IGNORE_LADDER, (short)0);    
     public static final FixtureDef BULLET_FIXTURE_DEF = PhysicsFactory.createFixtureDef(0.01f, 0.5f, 0.5f, false, CATEGORYBIT_BULLET, MASKBITS_BULLET, (short)0);

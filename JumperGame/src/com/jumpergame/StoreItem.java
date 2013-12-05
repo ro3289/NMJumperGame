@@ -82,52 +82,50 @@ public class StoreItem extends Item {
 
     public void useAttackItem(PhysicsWorld pw, final float pX, final float pY)
     {
-    	switch (itemType)
-    	{
-    	case ACID:
-    		// gameScene.setPlayerEnergy(1,0,-100);
-    	    if (!isOnline) {
-    	        ((GameScene)gameScene).getUser();
-                BulletItem acidBullet = new BulletItem(gameScene, pw, pX ,pY, itemType, resourcesManager.acid_bullet_region, resourcesManager.vbom, false);
-                acidBullet.shoot();
-    	    }
-    		break;
-    	case GLUE:
-    		BulletItem glueBullet = new BulletItem(gameScene, pw, pX, pY, itemType, resourcesManager.glue_bullet_region, resourcesManager.vbom, false);
-    		glueBullet.shoot();
-    		break;
-    	case TOOL:
-    		
-    		break;
-		default:
-			break;
-    	}
-    	minusItem();
+        if (!isOnline) {
+            switch (itemType)
+            {
+            case ACID:
+                    // gameScene.setPlayerEnergy(1,0,-100);
+                ((GameScene)gameScene).getUser();
+                    BulletItem acidBullet = new BulletItem(((GameScene)gameScene), pw, pX ,pY, itemType, resourcesManager.acid_bullet_region, resourcesManager.vbom, false);
+                    acidBullet.shoot();
+                    break;
+            case GLUE:
+                    BulletItem glueBullet = new BulletItem(((GameScene)gameScene), pw, pX, pY, itemType, resourcesManager.glue_bullet_region, resourcesManager.vbom, false);
+                    glueBullet.shoot();
+                    break;
+            case TOOL:
+                    
+                    break;
+                default:
+                        break;
+            }
+            
+        }
+        minusItem();
     }
     
     public void useEffectItem()
     {
-    	switch (itemType)
-    	{
-    	case ENERGY_DRINK:
-    	    if (!isOnline) {
+        if (!isOnline) {
+            switch (itemType)
+            {
+            case ENERGY_DRINK:
                 ((GameScene)gameScene).setPlayerEnergy(0, 1, +50);
-    	    }
-    		break;
-    	case INVISIBLE_DRINK:
-    	    if (!isOnline) {
+                    break;
+            case INVISIBLE_DRINK:
                 ((GameScene)gameScene).getUser().invisibleEffect();
-    	    }
-    		break;
-    	case INVINCIBLE_DRINK:
-    	    if (!isOnline) {
+                    break;
+            case INVINCIBLE_DRINK:
                 ((GameScene)gameScene).getUser().invincibleEffect();
-    	    }
-    		break;
-		default:
-			break;
-    	}
-    	minusItem();
+                    break;
+                default:
+                        break;
+            }
+            
+        }
+        minusItem();
     }
     
 
