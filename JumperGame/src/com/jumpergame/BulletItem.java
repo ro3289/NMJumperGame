@@ -10,12 +10,11 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.jumpergame.Scene.GameScene;
-import com.jumpergame.Scene.GameScene.ItemType;
 import com.jumpergame.body.Sprite_Body;
 import com.jumpergame.constant.GeneralConstants;
 
 
-public class BulletItem extends Item{
+public class BulletItem extends Item {
 
 	private PhysicsWorld physicsWorld;
 	private final Body bulletBody;

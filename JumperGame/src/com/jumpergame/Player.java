@@ -37,140 +37,139 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
         
     }
     
-	 // ---------------------------------------------
-	 // VARIABLES
-	 // ---------------------------------------------
-	     
+     // ---------------------------------------------
+     // VARIABLES
+     // ---------------------------------------------
+         
      private String userdata;
-	 private Body body;
-	 private int  velocityFactor = 8;
-	 private boolean invincibleState = false;
-	 
-	 public abstract void onDie();
+     private Body body;
+     private int  velocityFactor = 8;
+     private boolean invincibleState = false;
+     
+     public abstract void onDie();
 
-	 private boolean canRun = false;
-	 
-	 private int energy;
-	 private int score = 0;
-	 private int money = 0;
-	 private int playerType;
-	 
-	 private void createPhysics(final Camera camera, PhysicsWorld physicsWorld)
-	 {        
-		 if(playerType==1)
-			 body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, THIS_PLAYER_FIXTURE_DEF);
-		 else
-			 body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, OTHER_PLAYER_FIXTURE_DEF);
-	     body.setUserData(new Sprite_Body(this, userdata));
-	     body.setFixedRotation(true);
-	     
-	     physicsWorld.registerPhysicsConnector(new PhysicsConnector(this, body, true, false));
-	     
-	     /*{
-	         @Override
-	         public void onUpdate(float pSecondsElapsed)
-	         {
-	             super.onUpdate(pSecondsElapsed);
-	             camera.onUpdate(0.1f);
-	             
-	             if (getY() <= 0)
-	             {                    
-	                 onDie();
-	             }
-	             
-	             if (canRun)
-	             {    
-	                 body.setLinearVelocity(new Vector2(5, body.getLinearVelocity().y)); 
-	             }
-	         }
+     private boolean canRun = false;
+     
+     private int energy;
+     private int score = 0;
+     private int money = 0;
+     private int playerType;
+     
+     private void createPhysics(final Camera camera, PhysicsWorld physicsWorld)
+     {        
+         if(playerType==1)
+             body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, THIS_PLAYER_FIXTURE_DEF);
+         else
+             body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, OTHER_PLAYER_FIXTURE_DEF);
+         body.setUserData(new Sprite_Body(this, userdata));
+         body.setFixedRotation(true);
+         
+         physicsWorld.registerPhysicsConnector(new PhysicsConnector(this, body, true, false));
+         
+         /*{
+             @Override
+             public void onUpdate(float pSecondsElapsed)
+             {
+                 super.onUpdate(pSecondsElapsed);
+                 camera.onUpdate(0.1f);
+                 
+                 if (getY() <= 0)
+                 {                    
+                     onDie();
+                 }
+                 
+                 if (canRun)
+                 {    
+                     body.setLinearVelocity(new Vector2(5, body.getLinearVelocity().y)); 
+                 }
+             }
 
-	     });
-	 }
+         });
+     }
 
-	     });*/
-	     animate(new long[]{ 200, 200 }, 0, 1, true);
-	     setUserData(body);
-	 }
-	 
+         });*/
+         animate(new long[]{ 200, 200 }, 0, 1, true);
+         setUserData(body);
+     }
+     
 
-	 public void jump()
-	 {
-	     body.setLinearVelocity(new Vector2(body.getLinearVelocity().x, 8)); 
-	 }
-	 
-	 public int getEnergy() {
-	     return energy;
-	 }
-	    
-	 public void setEnergy(int e) {
-	     energy = e;
-	 }
+     public void jump()
+     {
+         body.setLinearVelocity(new Vector2(body.getLinearVelocity().x, 8)); 
+     }
+     
+     public int getEnergy() {
+         return energy;
+     }
+        
+     public void setEnergy(int e) {
+         energy = e;
+     }
 
-	 public int getScore() {
-	     return score;
-	 }
-	    
-	 public void setScore(int s) {
-	     score = s;
-	 }
-	 
-	 public int getMoney() {
-	     return money;
-	 }
-	    
-	 public void setMoney(int m) {
-	     money = m;
-	 }
-	 
-	 public Body returnBody()
-	 {
-		 return body;
-	 }
-	 
-	 public int getVelocityFactor()
-	 {
-		 return velocityFactor;
-	 }
-	 
-	 public void slowDownEffect()
-	 {
-		 velocityFactor = 1;
-		 registerUpdateHandler(new TimerHandler(3f, new ITimerCallback() 
-	    {
-			
+     public int getScore() {
+         return score;
+     }
+        
+     public void setScore(int s) {
+         score = s;
+     }
+     
+     public int getMoney() {
+         return money;
+     }
+        
+     public void setMoney(int m) {
+         money = m;
+     }
+     
+     public Body returnBody()
+     {
+         return body;
+     }
+     
+     public int getVelocityFactor()
+     {
+         return velocityFactor;
+     }
+     
+     public void slowDownEffect()
+     {
+         velocityFactor = 1;
+         registerUpdateHandler(new TimerHandler(3f, new ITimerCallback() 
+        {
+            
             public void onTimePassed(final TimerHandler pTimerHandler) 
             {
                 unregisterUpdateHandler(pTimerHandler);
                 velocityFactor = 8;
             }
-	    }));
-	 }
-	 public void invisibleEffect()
-	 {	
-		 setAlpha(0.3f);
-		 registerUpdateHandler(new TimerHandler(4f, new ITimerCallback() 
-	    {
-			
+        }));
+     }
+     public void invisibleEffect()
+     {  
+         setAlpha(0.3f);
+         registerUpdateHandler(new TimerHandler(4f, new ITimerCallback() 
+        {
+            
             public void onTimePassed(final TimerHandler pTimerHandler) 
             {
                 unregisterUpdateHandler(pTimerHandler);
                 setAlpha(1f);
             }
-	    }));
-	 }
-	 public void invincibleEffect()
-	 {	// Not corrected yet
-		invincibleState = true;
-		 registerUpdateHandler(new TimerHandler(4f, new ITimerCallback() 
-	    {
-			
+        }));
+     }
+     public void invincibleEffect()
+     {  // Not corrected yet
+        invincibleState = true;
+         registerUpdateHandler(new TimerHandler(4f, new ITimerCallback() 
+        {
+            
             public void onTimePassed(final TimerHandler pTimerHandler) 
             {
                 unregisterUpdateHandler(pTimerHandler);
                 invincibleState = false;
             }
-	    }));
-	 }
+        }));
+     }
 
 }
-
