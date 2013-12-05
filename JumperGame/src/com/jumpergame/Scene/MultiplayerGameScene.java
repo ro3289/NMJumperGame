@@ -65,7 +65,7 @@ import com.jumpergame.body.Sprite_Body;
 import com.jumpergame.constant.GeneralConstants;
 
 
-public class MultiplayerGameScene extends GameScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
+public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchListener, IOnAreaTouchListener,GeneralConstants,IAccelerationListener
 {
     public HUD gameHUD;
     private final MultiplayerGameScene gc = this;
@@ -77,7 +77,9 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     private SparseArray<Text> mMoneyTextMap;
     
     //bullets
-    private final HashMap<Integer, Rectangle> mBullets = new HashMap<Integer, Rectangle>();
+//    private final HashMap<Integer, Rectangle> mBullets = new HashMap<Integer, Rectangle>();
+    
+//    private final HashMap<Integer, Sprite> mObjects = new HashMap<Integer, Sprite>();
     
     // jump setting
     private Vector2 initVector;
@@ -103,9 +105,10 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     private boolean buyItem = false;
     
     //private ArrayList<Fixture> f;
-    private ArrayList<Rectangle> mWalls;
+    public ArrayList<Rectangle> mWalls;
     private ArrayList<Sprite> mSprites;
     private ArrayList<ArrayList<Fixture>> ff;
+    public Rectangle mGround;
     
     private void createInfoHUD()
     {
@@ -155,7 +158,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     
     private void createAttackItem(final float x, final float y, final ItemType type, final int price, final ITextureRegion itemTextureRegion)
     {   
-        StoreItem item= new StoreItem(this, x, y, type, price, itemTextureRegion, vbom)
+        StoreItem item= new StoreItem(this, x, y, type, price, itemTextureRegion, vbom, true)
         {
              @Override
             public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -170,7 +173,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
                         if(getItemAmount() > 0 )
                         {
                             currentDragItem = this;
-                            dragItem = new Item(gc, x, y, type, itemTextureRegion, vbom);
+                            dragItem = new Item(gc, x, y, type, itemTextureRegion, vbom, true);
                             gameHUD.attachChild(dragItem);
                         }                   
                     }
@@ -185,7 +188,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     }
     private void createEffectItem(final float x, final float y, final ItemType type,final int p, final ITextureRegion itemTextureRegion)
     {   
-        StoreItem item= new StoreItem(this, x, y, type, p, itemTextureRegion, vbom)
+        StoreItem item= new StoreItem(this, x, y, type, p, itemTextureRegion, vbom, true)
         {
              @Override
             public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -212,7 +215,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     }
     private void createStoreButton(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
     {   
-        Item item= new Item(this, x, y, type, itemTextureRegion, vbom); // TODO storeItems
+        Item item= new Item(this, x, y, type, itemTextureRegion, vbom, true); // TODO storeItems
         /*
         {
              @Override
@@ -244,13 +247,27 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     }
     
     private void createBackground() {
-        setBackground(new Background(0.09804f, 0.6274f, 0.8784f));
+        Sprite background1 = new Sprite(240, 400, resourcesManager.background1_region, vbom);
+        Sprite background2 = new Sprite(240, 1200, resourcesManager.background2_region, vbom);
+        Sprite background3 = new Sprite(240, 2000, resourcesManager.background3_region, vbom);
+        Sprite background4 = new Sprite(240, 2800, resourcesManager.background4_region, vbom);
+    //  SpriteBackground spriteBackground = new SpriteBackground(background);
+        attachChild(background1);
+        attachChild(background2);
+        attachChild(background3);
+        attachChild(background4);
     }
     
     @Override
     public void createScene()
     {
-        ResourcesManager.getInstance().getActivity().showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+        ResourcesManager.getInstance().getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ResourcesManager.getInstance().getActivity().showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+            }
+        });
+                
         
         createBackground();
         gameHUD = new HUD();
@@ -293,9 +310,12 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
         ff=new ArrayList<ArrayList<Fixture>>();
         mPlayers = new SparseArray<Player_Client>();
         
-        mWalls.add(ground);
+        mWalls = new ArrayList<Rectangle>();
+        
+        mGround = ground;
+//        mWalls.add(ground);
         mWalls.add(left);
-        mWalls.add(right);        
+        mWalls.add(right);
         attachChild(ground);
         attachChild(left);
         attachChild(right);
@@ -319,6 +339,9 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
             }
         });
         System.out.println("7");
+        
+        mSprites = new ArrayList<Sprite>();
+        
         levelLoader.registerEntityLoader(new EntityLoader<SimpleLevelEntityLoaderData>(TAG_ENTITY)
         {
             public IEntity onLoadEntity(final String pEntityName, final IEntity pParent, final Attributes pAttributes, final SimpleLevelEntityLoaderData pSimpleLevelEntityLoaderData) throws IOException
@@ -332,47 +355,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
                 if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
                 {
                     levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
-                    /* TODO: stairs effect
-                    {
-                        
-                        @Override
-                        protected void onManagedUpdate(float pSecondsElapsed) 
-                        {
-                            super.onManagedUpdate(pSecondsElapsed);
-//                            System.out.println("bbbb");
-//                            System.out.println(ff.size());
-                            if(GameScene.this.getThisPlayer().returnBody().getLinearVelocity().y > 0 )
-                            {
-//                              System.out.println(":)))");
-                                for(int k=0; k<ff.size();k++)
-                                {
-                                    ArrayList<Fixture> f=ff.get(k);
-                                Filter fil=f.get(0).getFilterData();
-                                fil.categoryBits=CATEGORYBIT_WALL;
-                                fil.maskBits=MASKBITS_WALL2;
-                                f.get(0).setFilterData(fil);
-                                }
-                            }
-                            else
-                            {
-//                              System.out.println(":(((");
-                                for(int k=0; k<ff.size();k++)
-                                {
-                                    ArrayList<Fixture> f=ff.get(k);
-                                Filter fil=f.get(0).getFilterData();
-                            fil.categoryBits=CATEGORYBIT_WALL;
-                            fil.maskBits=MASKBITS_WALL;
-                            f.get(0).setFilterData(fil);
-                                }
-                            }
-                        }
-                    };
-                    */
-//                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, GROUND_AND_STAIR2_FIXTURE_DEF);
-//                    body.setUserData(new Sprite_Body(levelObject, "Wall"));
-                    
-//                    ff.add( body.getFixtureList()) ;
-//                    mSprites.add(levelObject);
+//                    System.out.println("platform1");
                 } 
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2))
                 {
@@ -396,12 +379,13 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
                 {
                     levelObject = createFloatingItem(x, y, ItemType.COIN, resourcesManager.coin_region);
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+//                    System.out.println("coin");
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID))
                 {
-                    System.out.println("acid before");
+//                    System.out.println("acid before");
                     levelObject = createFloatingItem(x, y, ItemType.ACID, resourcesManager.acid_region);
-                    System.out.println("acid after");
+//                    System.out.println("acid after");
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
                 }
                 else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE))
@@ -461,7 +445,8 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
             }
 
             private Sprite createFloatingItem( int x, int y, final ItemType type, ITextureRegion region) {
-                Sprite object = new Item(gc, x, y, type, region, vbom)
+                Sprite object = new Item(gc, x, y, type, region, vbom, true);
+                /*
                 {
                      @Override
                      protected void onManagedUpdate(float pSecondsElapsed) 
@@ -484,6 +469,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
                          }
                      }
                 };
+                */
                 
                 return object;
             }
@@ -694,27 +680,21 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     // Methods
     // ===========================================================
     
-    private void addPlayer(final int playerID, final float initX, final float initY) {
+    public void addPlayer(final int playerID, final float initX, final float initY) {
+        if (mPlayers.get(playerID) != null) return;
         System.out.println("Add player, id = "+playerID+"initX = "+initX+"initY = "+initY);
-        
-        if (thisID == playerID) return;
         
         final float centerX = CAMERA_WIDTH / 2;
         final float centerY = CAMERA_HEIGHT / 2;
         AnimatedSprite appearance;
         
-        if (thisID == -1) {
-            thisID = playerID;
-            
-//            appearance = new AnimatedSprite(MathUtils.random(10, CAMERA_WIDTH-10), centerY, mBoxFaceTextureRegion, getVertexBufferObjectManager());
+        if (thisID == playerID) {
             appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player_region, ResourcesManager.getInstance().vbom);
             appearance.animate(new long[]{ 200, 200 }, 0, 1, true);
             registerTouchArea(appearance);
             attachChild(appearance);
             
             ResourcesManager.getInstance().camera.setChaseEntity(appearance);
-            
-//            Player_Client thisPlayer = new Player_Client(appearance, thisID);
         }
         else { // TODO: enemy appearance
             appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player_region, ResourcesManager.getInstance().vbom);
@@ -726,8 +706,18 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
         mPlayers.append(playerID, new Player_Client(appearance, playerID));
     }
     
-    private void addObject(final int mObjectId, final String mTextureName, final float initX, final float initY) {
-//        swtich(mTextureName)
+    private void addObject(final int mObjectId, final String mTextureName, final float initX, final float initY) { // TODO maybe we don't need it XD 
+        /*
+        if (mTextureName.equals("platform1")) {
+            
+        } else if (mTextureName.equals("platform2")) {
+            
+        } else if (mTextureName.equals("platform3")) {
+            
+        } else if (mTextureName.equals("")) {
+            
+        }
+        */
     }
 
     private void computeScore() {
@@ -768,6 +758,10 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     
     public ArrayList<Sprite> getSprites() {
         return mSprites;
+    }
+    
+    public void setObjectPosition(final int objID, final float mX, final float mY) {
+        mSprites.get(objID).setPosition(mX, mY);
     }
     
     /*
@@ -900,6 +894,12 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {
         // TODO Auto-generated method stub
         
+    }
+    public void setPlayerID(int pID) {
+        thisID = pID;
+    }
+    public void updatePlayer(int mPlayerID, float mX, float mY) {
+        mPlayers.get(mPlayerID).getAppearance().setPosition(mX, mY);
     }
     
     

@@ -1,6 +1,7 @@
 package com.jumpergame;
 
 
+import org.andengine.entity.scene.Scene;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
@@ -9,6 +10,7 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.align.HorizontalAlign;
 
 import com.jumpergame.Scene.GameScene;
+import com.jumpergame.Scene.MultiplayerGameScene;
 
 public class StoreItem extends Item {
 	
@@ -17,19 +19,29 @@ public class StoreItem extends Item {
 	protected int 	itemAmount;
 	protected Text	itemAmountText;
 	
-	public StoreItem(GameScene gc, float pX, float pY, ItemType type, int price,
-			ITextureRegion pTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager){
-		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
+	public StoreItem(Scene gc, float pX, float pY, ItemType type, int price,
+			ITextureRegion pTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager, boolean online){
+		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager, online);
 		
 		itemPrice = price;
 		itemPriceText = new Text(pX, pY - 50 , resourcesManager.mPriceFont, String.valueOf(itemPrice), 10 ,new TextOptions(HorizontalAlign.LEFT), resourcesManager.vbom);
 		itemPriceText.setAnchorCenter(0, 0);
-		gameScene.gameHUD.attachChild(itemPriceText);
+		
+		if (isOnline) {
+		    ((MultiplayerGameScene)gameScene).gameHUD.attachChild(itemPriceText);
+		} else {
+		    ((GameScene)gameScene).gameHUD.attachChild(itemPriceText);
+		}
 		
 		itemAmount = 0;
 		itemAmountText = new Text(pX, pY + 30 , resourcesManager.mItemAmountFont, "0", 10 ,new TextOptions(HorizontalAlign.LEFT), resourcesManager.vbom);
 		itemAmountText.setAnchorCenter(0, 0);
-		gameScene.gameHUD.attachChild(itemAmountText);
+		
+		if (isOnline) {
+            ((MultiplayerGameScene)gameScene).gameHUD.attachChild(itemAmountText);
+        } else {
+            ((GameScene)gameScene).gameHUD.attachChild(itemAmountText);
+        }
 		
 		setAlpha(0.3f);
 	}
@@ -38,10 +50,11 @@ public class StoreItem extends Item {
 	
 	public void buyStoreItem()
     {
-    	
-    	boolean buySuccess = gameScene.minusPlayerMoney(itemPrice);
-    	if(buySuccess){
-    		plusItem();
+    	if (!isOnline) {
+            boolean buySuccess = ((GameScene)gameScene).minusPlayerMoney(itemPrice);
+            if(buySuccess){
+                plusItem();
+            }
     	}
     }
     public int getItemAmount()
@@ -73,12 +86,14 @@ public class StoreItem extends Item {
     	{
     	case ACID:
     		// gameScene.setPlayerEnergy(1,0,-100);
-    		gameScene.getUser();
-    		BulletItem acidBullet = new BulletItem(gameScene, pw, pX ,pY, itemType, resourcesManager.acid_bullet_region, resourcesManager.vbom);
-    		acidBullet.shoot();
+    	    if (!isOnline) {
+    	        ((GameScene)gameScene).getUser();
+                BulletItem acidBullet = new BulletItem(gameScene, pw, pX ,pY, itemType, resourcesManager.acid_bullet_region, resourcesManager.vbom, false);
+                acidBullet.shoot();
+    	    }
     		break;
     	case GLUE:
-    		BulletItem glueBullet = new BulletItem(gameScene, pw, pX, pY, itemType, resourcesManager.glue_bullet_region, resourcesManager.vbom);
+    		BulletItem glueBullet = new BulletItem(gameScene, pw, pX, pY, itemType, resourcesManager.glue_bullet_region, resourcesManager.vbom, false);
     		glueBullet.shoot();
     		break;
     	case TOOL:
@@ -95,13 +110,19 @@ public class StoreItem extends Item {
     	switch (itemType)
     	{
     	case ENERGY_DRINK:
-    		gameScene.setPlayerEnergy(0, 1, +50);
+    	    if (!isOnline) {
+                ((GameScene)gameScene).setPlayerEnergy(0, 1, +50);
+    	    }
     		break;
     	case INVISIBLE_DRINK:
-    		gameScene.getUser().invisibleEffect();
+    	    if (!isOnline) {
+                ((GameScene)gameScene).getUser().invisibleEffect();
+    	    }
     		break;
     	case INVINCIBLE_DRINK:
-    		gameScene.getUser().invincibleEffect();
+    	    if (!isOnline) {
+                ((GameScene)gameScene).getUser().invincibleEffect();
+    	    }
     		break;
 		default:
 			break;

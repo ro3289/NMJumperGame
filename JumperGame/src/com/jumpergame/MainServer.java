@@ -26,6 +26,7 @@ import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.extension.physics.box2d.util.constants.PhysicsConstants;
 import org.andengine.util.debug.Debug;
+import org.andengine.util.math.MathUtils;
 
 import android.hardware.SensorManager;
 import android.util.SparseArray;
@@ -36,8 +37,10 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Scene.MultiplayerGameScene;
 import com.jumpergame.connection.client.ConnectionCloseClientMessage;
@@ -47,12 +50,14 @@ import com.jumpergame.connection.client.PlayerJumpClientMessage;
 import com.jumpergame.connection.client.PlayerShootClientMessage;
 import com.jumpergame.connection.client.PlayerUseItemClientMessage;
 import com.jumpergame.connection.server.AddObjectServerMessage;
+import com.jumpergame.connection.server.AddPlayerServerMessage;
 import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
 import com.jumpergame.connection.server.ConnectionMainServerMessage;
 import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
 import com.jumpergame.connection.server.UpdateObjectServerMessage;
+import com.jumpergame.connection.server.UpdatePlayerServerMessage;
 import com.jumpergame.connection.server.UpdateScoreServerMessage;
 import com.jumpergame.constant.ConnectionConstants;
 import com.jumpergame.constant.GeneralConstants;
@@ -72,13 +77,15 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
     private ServerConnector<SocketConnection> mServerConnector;
     
     private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
-    private final ArrayList<UpdateObjectServerMessage> mUpdateObjectServerMessage = new ArrayList<UpdateObjectServerMessage>();
+    private final ArrayList<UpdatePlayerServerMessage> mUpdatePlayerServerMessages = new ArrayList<UpdatePlayerServerMessage>();
     
     private final PhysicsWorld mPhysicsWorld;
     private MainActivity mMainActivity;
     
     private final SparseArray<Player_Server> mPlayerBodies = new SparseArray<Player_Server>();
-    private final SparseArray<Body> mBulletBodies = new SparseArray<Body>();
+//    private final SparseArray<Body> mBulletBodies = new SparseArray<Body>();
+    private final SparseArray<Body> mBodies = new SparseArray<Body>();
+    private ArrayList<ArrayList<Fixture>> mStairFixtures;
     private final HashMap<String, Integer> IP_PlayerID = new HashMap<String, Integer>();
     
     // ===========================================================
@@ -87,6 +94,7 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
     public MainServer(final MainActivity activity, final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener) {
         super(SERVER_PORT, pSocketConnectionClientConnectorListener, new DefaultSocketServerListener<SocketConnectionClientConnector>());
         mMainActivity = activity;
+        mStairFixtures = new ArrayList<ArrayList<Fixture>>();
         
         initMessagePool();
         
@@ -106,7 +114,7 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
 //        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_BULLET, UpdateBulletServerMessage.class);
 //        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER, UpdatePlayerServerMessage.class);
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ADD_OBJ, AddObjectServerMessage.class);
-        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_OBJ, UpdateObjectServerMessage.class);
+        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER, UpdatePlayerServerMessage.class);
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_REMOVE_OBJ, RemoveObjectServerMessage.class);
     }
     
@@ -115,15 +123,28 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         this.mPhysicsWorld.setGravity(gravity);
         Vector2Pool.recycle(gravity);
         
+        Rectangle ground = ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).mGround;
+        Body groundBody = PhysicsFactory.createBoxBody(mPhysicsWorld, ground, BodyType.StaticBody, GROUND_FIXTURE_DEF);
+        groundBody.setUserData("Wall");
+        System.out.println("SERVER adds ground, Body_x = " + groundBody.getPosition().x + ", Body_y = " + groundBody.getPosition().y);
         
-        for (Rectangle wall : ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).getWalls()) {
-            Body wallBody = PhysicsFactory.createBoxBody(mPhysicsWorld, wall, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF);
+        for (Rectangle wall : ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).mWalls) {
+            Body wallBody = PhysicsFactory.createBoxBody(mPhysicsWorld, wall, BodyType.StaticBody, WALL_FIXTURE_DEF);
             wallBody.setUserData("Wall");
             System.out.println("SERVER adds wall, Body_x = " + wallBody.getPosition().x + ", Body_y = " + wallBody.getPosition().y);
         }
         
         for (Sprite sprite : ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).getSprites()) {
             String type = (String) sprite.getUserData();
+            Body body;
+            
+            if (type.equals("platform1")) {
+                body = PhysicsFactory.createBoxBody(mPhysicsWorld, sprite, BodyType.StaticBody, STAIR_FIXTURE_DEF);
+                body.setUserData("Wall");
+                mStairFixtures.add(body.getFixtureList()) ;
+            }
+            
+            
         }
         
         /*
@@ -148,12 +169,27 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         // TODO updateFrame
         
         mPhysicsWorld.onUpdate(pSecondsElapsed);
-
-        /* Prepare UpdateObjectServerMessage. */
-        ArrayList<UpdateObjectServerMessage> updateObjectServerMessages = mUpdateObjectServerMessage;
-//        System.out.println("Bullet Num = " + updateBulletServerMessages.size());
         
         final SparseArray<Player_Server> players = mPlayerBodies;
+        for(int j = 0; j < players.size(); j++) {
+            final int key = players.keyAt(j);
+            final Player_Server player = players.get(key);
+            final Body pBody = player.getBody();
+            
+            Filter fil = pBody.getFixtureList().get(0).getFilterData();
+            if (pBody.getLinearVelocity().y > 0) {
+                fil.maskBits = MASKBITS_PLAYER_IGNORE_LADDER;
+            }
+            else {
+                fil.maskBits = MASKBITS_PLAYER;
+            }
+            pBody.getFixtureList().get(0).setFilterData(fil);
+        }
+        
+        /* Prepare UpdatePlayerServerMessage. */
+        ArrayList<UpdatePlayerServerMessage> updatePlayerServerMessages = mUpdatePlayerServerMessages;
+//        System.out.println("Player Num = " + updatePlayerServerMessages.size());
+        
         for(int j = 0; j < players.size(); j++) {
             final int key = players.keyAt(j);
 //            System.out.println("key = " + key);
@@ -161,30 +197,34 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
             final Body playerBody = player.getBody();
             final Vector2 playerPosition = playerBody.getPosition();
 
-            final float playerX = playerPosition.x * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - mMainActivity.getBoxFaceTextureRegion().getWidth()/2;  //PADDLE_WIDTH_HALF;
-            final float playerY = playerPosition.y * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - mMainActivity.getBoxFaceTextureRegion().getHeight()/2;//PADDLE_HEIGHT_HALF;
+            final float playerX = playerPosition.x * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - ResourcesManager.getInstance().player_region.getWidth()/2;  //PADDLE_WIDTH_HALF;
+            final float playerY = playerPosition.y * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - ResourcesManager.getInstance().player_region.getHeight()/2;//PADDLE_HEIGHT_HALF;
             
             System.out.println("update player, x = " + playerX + ", y = " + playerY);
 
-            final UpdateObjectServerMessage updatePlayerServerMessage = (UpdateObjectServerMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_UPDATE_OBJ);
-            updatePlayerServerMessage.set(player.getID(), playerX, playerY);
+            final UpdatePlayerServerMessage updatePlayerServerMessage = (UpdatePlayerServerMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER);
+            updatePlayerServerMessage.set(player.getPlayerID(), playerX, playerY);
 
-            updateObjectServerMessages.add(updatePlayerServerMessage);
+            updatePlayerServerMessages.add(updatePlayerServerMessage);
         }
         
         try {
+
             /* Update Players */
-            for(int j = 0; j < updateObjectServerMessages.size(); ++j) {
+            for(int j = 0; j < updatePlayerServerMessages.size(); ++j) {
 //                System.out.println("update player XDDDDDDDDDDDDDDDD... size = " + updatePlayerServerMessages.size());
-                sendBroadcastServerMessage(updateObjectServerMessages.get(j));
+                sendBroadcastServerMessage(updatePlayerServerMessages.get(j));
             }
         } catch (final IOException e) {
             Debug.e(e);
         }
         
         /* Recycle messages. */
-        mMessagePool.recycleMessages(updateObjectServerMessages);
-        updateObjectServerMessages.clear();
+//        mMessagePool.recycleMessages(updateBulletServerMessages);
+        mMessagePool.recycleMessages(updatePlayerServerMessages);
+//        updateBulletServerMessages.clear();
+        updatePlayerServerMessages.clear();
+
     }
 
     @Override
@@ -268,15 +308,15 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
                 
                 if(connectionEstablishClientMessage.getProtocolVersion() == PROTOCOL_VERSION && !IP_PlayerID.keySet().contains(newIP)) {
                     try {
+                        final float initX = MathUtils.random(10, CAMERA_WIDTH-10);
+                        final float initY = 500;
+                        final int newPlayerID = addPlayer(newIP, initX, initY);
+                        
+                        connectionEstablishedServerMessage.setID(newPlayerID);
                         pClientConnector.sendServerMessage(connectionEstablishedServerMessage);
                         System.out.println("sent connectionEstablishedServerMessage");
                         
-                        /*
-                        final float initX = MathUtils.random(10, CAMERA_WIDTH-10);
-                        final float initY = CAMERA_HEIGHT -10;
-                        System.out.println("intiX & Y");
-                        final int newPlayerID = addPlayer(newIP, initX, initY);
-                        System.out.println(newPlayerID);
+//                        final int newObjectID = mPlayerBodies.get(newPlayerID).getObjectID();
                         pClientConnector.sendServerMessage(new AddPlayerServerMessage(newPlayerID, initX, initY));
                         sendBroadcastServerMessage(new AddPlayerServerMessage(newPlayerID, initX, initY));
                         System.out.println("sent AddPlayerServerMessage" + newPlayerID);
@@ -288,7 +328,7 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
                                 System.out.println("sent AddPlayerServerMessage" + ID);
                             }
                         }
-                        */
+                        
                     } catch (IOException e) {
                         Debug.e(e);
                     }
@@ -351,30 +391,21 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
     private synchronized int addPlayer(final String newIP, final float initX, final float initY) {
         Player_Server newPlayer = new Player_Server(newIP);
         
-//        System.out.println(mMainActivity.getFaceTextureRegion() == null);
-        
-//        AnimatedSprite appearance = new AnimatedSprite(initX, initY, mMainActivity.getBoxFaceTextureRegion(), mMainActivity.getVertexBufferObjectManager());
-        AnimatedSprite appearance = new AnimatedSprite(initX, initY, null, mMainActivity.getVertexBufferObjectManager());
-        Body newPlayerBody = PhysicsFactory.createBoxBody(mPhysicsWorld, appearance, BodyType.DynamicBody, THIS_PLAYER_FIXTURE_DEF);
-//        newPlayerBody.setTransform(initX, initY, 0);
-//        newPlayerBody.setUserData(new Sprite_Body(appearance, newIP));
+        AnimatedSprite appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player_region, ResourcesManager.getInstance().vbom);
+        Body newPlayerBody = PhysicsFactory.createBoxBody(mPhysicsWorld, appearance, BodyType.DynamicBody, PLAYER_FIXTURE_DEF);
         newPlayerBody.setUserData(newIP);
         
-        System.out.println("SERVER adds player 1, x = " + newPlayerBody.getPosition().x + ", y = " + newPlayerBody.getPosition().y);
         mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(appearance, newPlayerBody, true, false));
-        System.out.println("SERVER adds player 2, x = " + newPlayerBody.getPosition().x + ", y = " + newPlayerBody.getPosition().y);
         
         final int newID = IP_PlayerID.size();
-        newPlayer.setID(newID);
+        newPlayer.setPlayerID(newID);
         newPlayer.setBody(newPlayerBody);
         IP_PlayerID.put(newIP, newID);
         mPlayerBodies.append(newID, newPlayer);
         
-//        mMainActivity.getScene().attachChild(appearance);
-        
-        System.out.println("newID = " + newID);
-        
-        System.out.println("SERVER adds player 3, x = " + newPlayerBody.getPosition().x + ", y = " + newPlayerBody.getPosition().y);
+        final int newObjectID = mBodies.size();
+        newPlayer.setObjectID(newObjectID);
+        mBodies.append(newObjectID, newPlayerBody);
         
         return newID;
     }
