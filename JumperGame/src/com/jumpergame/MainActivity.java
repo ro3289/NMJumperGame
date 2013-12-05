@@ -1,6 +1,8 @@
 package com.jumpergame;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 import org.andengine.engine.Engine;
 import org.andengine.engine.LimitedFPSEngine;
@@ -12,18 +14,48 @@ import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.WakeLockOptions;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
+import org.andengine.extension.multiplayer.protocol.adt.message.server.IServerMessage;
+import org.andengine.extension.multiplayer.protocol.client.IServerMessageHandler;
+import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
+import org.andengine.extension.multiplayer.protocol.client.connector.SocketConnectionServerConnector.ISocketConnectionServerConnectorListener;
+import org.andengine.extension.multiplayer.protocol.server.connector.ClientConnector;
+import org.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector.ISocketConnectionClientConnectorListener;
+import org.andengine.extension.multiplayer.protocol.shared.SocketConnection;
+import org.andengine.extension.multiplayer.protocol.util.WifiUtils;
 import org.andengine.ui.activity.BaseGameActivity;
+import org.andengine.util.debug.Debug;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.view.KeyEvent;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
+import com.jumpergame.connection.client.ConnectionEstablishClientMessage;
+import com.jumpergame.connection.server.AddObjectServerMessage;
+import com.jumpergame.connection.server.ConnectionCloseServerMessage;
+import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
+import com.jumpergame.connection.server.ConnectionMainServerMessage;
+import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
+import com.jumpergame.connection.server.RemoveObjectServerMessage;
+import com.jumpergame.connection.server.UpdateObjectServerMessage;
+import com.jumpergame.connection.server.UpdateScoreServerMessage;
+import com.jumpergame.constant.ConnectionConstants;
+import com.jumpergame.constant.GeneralConstants;
 
-public class MainActivity extends BaseGameActivity {
+public class MainActivity extends BaseGameActivity implements GeneralConstants, ConnectionConstants {
 	private ResourcesManager resourcesManager;
 	private BoundCamera mCamera;
-	private final float CAMERA_WIDTH  = 480;
-	private final float CAMERA_HEIGHT = 800;
+//	private final float CAMERA_WIDTH  = 480;
+//	private final float CAMERA_HEIGHT = 800;
+	
+	private MainServer mServer;
+	public MainClient mClient;
+	private String mServerIP = LOCALHOST_IP;
 	
 	@Override
 	public Engine onCreateEngine(EngineOptions pEngineOptions) 
@@ -33,6 +65,8 @@ public class MainActivity extends BaseGameActivity {
 	
 	@Override
 	public EngineOptions onCreateEngineOptions() {
+//	    showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+	    
 		this.mCamera = new BoundCamera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 	    EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.PORTRAIT_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH,CAMERA_HEIGHT), this.mCamera);
 	    engineOptions.getAudioOptions().setNeedsMusic(true).setNeedsSound(true);
@@ -77,11 +111,107 @@ public class MainActivity extends BaseGameActivity {
 	    pOnPopulateSceneCallback.onPopulateSceneFinished();
 		
 	}
+	
+	@Override
+    protected Dialog onCreateDialog(final int pID) {
+        switch(pID) {
+            case DIALOG_SHOW_SERVER_IP_ID:
+                try {
+                    return new AlertDialog.Builder(this)
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setTitle("Your Server-IP ...")
+                    .setCancelable(false)
+                    .setMessage("The IP of your Server is:\n" + WifiUtils.getWifiIPv4Address(this))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create();
+                } catch (final UnknownHostException e) {
+                    return new AlertDialog.Builder(this)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Your Server-IP ...")
+                    .setCancelable(false)
+                    .setMessage("Error retrieving IP of your Server: " + e)
+                    .setPositiveButton(android.R.string.ok, new OnClickListener() {
+                        @Override
+                        public void onClick(final DialogInterface pDialog, final int pWhich) {
+                            MainActivity.this.finish();
+                        }
+                    })
+                    .create();
+                }
+            case DIALOG_ENTER_SERVER_IP_ID:
+                final EditText ipEditText = new EditText(this);
+                return new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setTitle("Enter Server-IP ...")
+                .setCancelable(false)
+                .setView(ipEditText)
+                .setPositiveButton("Connect", new OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface pDialog, final int pWhich) {
+                        MainActivity.this.mServerIP = ipEditText.getText().toString();
+                        MainActivity.this.initClient();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface pDialog, final int pWhich) {
+                        MainActivity.this.finish();
+                    }
+                })
+                .create();
+            case DIALOG_CHOOSE_SERVER_OR_CLIENT_ID:
+                return new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setTitle("Be Server or Client ...")
+                .setCancelable(false)
+                .setPositiveButton("Client", new OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface pDialog, final int pWhich) {
+                        MainActivity.this.showDialog(DIALOG_ENTER_SERVER_IP_ID);
+                    }
+                })
+                .setNeutralButton("Server", new OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface pDialog, final int pWhich) {
+                        MainActivity.this.toastOnUiThread("You can add and move sprites, which are only shown on the clients.");
+                        MainActivity.this.initServer();
+                        MainActivity.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
+                    }
+                })
+                .setNegativeButton("Both", new OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface pDialog, final int pWhich) {
+                        MainActivity.this.toastOnUiThread("You can add sprites and move them, by dragging them.");
+                        MainActivity.this.initServerAndClient();
+                        MainActivity.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
+                    }
+                })
+                .create();
+            default:
+                return super.onCreateDialog(pID);
+        }
+    }
+	
 	@Override
 	protected void onDestroy()
 	{
+        if(this.mServer != null) {
+            try {
+                this.mServer.sendBroadcastServerMessage(new ConnectionCloseServerMessage());
+            } catch (final IOException e) {
+                Debug.e(e);
+            }
+            this.mServer.terminate();
+        }
+
+        if (this.mClient != null) {
+            if(this.mClient.mServerConnector != null) {
+                this.mClient.mServerConnector.terminate();
+            }
+        }
+	    
 		super.onDestroy();
-	        System.exit(0);	
+	    System.exit(0);	
 	}
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) 
@@ -92,4 +222,195 @@ public class MainActivity extends BaseGameActivity {
 	    }
 	    return false; 
 	}
+	
+    private void initServerAndClient() {
+        MainActivity.this.initServer();
+
+        /* Wait some time after the server has been started, so it actually can start up. */
+        try {
+            Thread.sleep(500);
+        } catch (final Throwable t) {
+            Debug.e(t);
+        }
+
+        MainActivity.this.initClient();
+    }
+
+    private void initServer() {
+        Debug.d("initServer");
+        this.mServer = new MainServer(this, new MainClientConnectorListener());
+
+        this.mServer.start();
+
+        this.mEngine.registerUpdateHandler(mServer);
+    }
+
+    private void initClient() {
+        Debug.d("initClient, mServerIP = " + this.mServerIP);
+        try {
+            mClient = new MainClient(this, new MainServerConnector(mServerIP, new MainServerConnectorListener()));
+
+            mClient.mServerConnector.getConnection().start();
+            getEngine().registerUpdateHandler(mClient);
+        } catch (final Throwable t) {
+            Debug.e(t);
+        }
+    }	
+	
+    // ===========================================================
+    // Inner and Anonymous Classes
+    // ===========================================================
+
+    private class MainServerConnector extends ServerConnector<SocketConnection> implements ConnectionConstants { // TODO S->C protocols
+        // ===========================================================
+        // Constants
+        // ===========================================================
+
+        // ===========================================================
+        // Fields
+        // ===========================================================
+
+        // ===========================================================
+        // Constructors
+        // ===========================================================
+
+        public MainServerConnector(final String pServerIP, final ISocketConnectionServerConnectorListener pSocketConnectionServerConnectorListener) throws IOException {
+            super(new SocketConnection(new Socket(pServerIP, SERVER_PORT)), pSocketConnectionServerConnectorListener);
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    System.out.println("GG!!");
+                    MainActivity.this.finish();
+                }
+            });
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED, ConnectionEstablishedServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    Debug.d("CLIENT: Connection established.");
+                    System.out.println("Connected!!");
+                }
+            });
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH, ConnectionRejectedProtocolMissmatchServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final ConnectionRejectedProtocolMissmatchServerMessage connectionRejectedProtocolMissmatchServerMessage = (ConnectionRejectedProtocolMissmatchServerMessage)pServerMessage;
+                    if(connectionRejectedProtocolMissmatchServerMessage.getProtocolVersion() > PROTOCOL_VERSION) {
+                        //                      Toast.makeText(context, text, duration).show();
+                    } else if(connectionRejectedProtocolMissmatchServerMessage.getProtocolVersion() < PROTOCOL_VERSION) {
+                        //                      Toast.makeText(context, text, duration).show();
+                    }
+                    MainActivity.this.finish();
+                }
+            });
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_MAIN, ConnectionMainServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final ConnectionMainServerMessage connectionPongServerMessage = (ConnectionMainServerMessage) pServerMessage;
+                    final long roundtripMilliseconds = System.currentTimeMillis() - connectionPongServerMessage.getTimestamp();
+                    Debug.v("Ping: " + roundtripMilliseconds / 2 + "ms");
+                }
+            });
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_ADD_OBJ, AddObjectServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final AddObjectServerMessage addObjectServerMessage = (AddObjectServerMessage) pServerMessage;
+                    System.out.println("Added!!");
+                    /*
+                    MainActivity.this.addPlayer(
+                        addPlayerIDServerMessage.mPlayerID,
+                        addPlayerIDServerMessage.initX, 
+                        addPlayerIDServerMessage.initY
+                    );
+                    */ // TODO
+                }
+            });
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_UPDATE_SCORE, UpdateScoreServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final UpdateScoreServerMessage updateScoreServerMessage = (UpdateScoreServerMessage) pServerMessage;
+//                    MainActivity.this.updateScore(updateScoreServerMessage.mPlayerID, updateScoreServerMessage.mScore); TODO
+                }
+            });
+
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_UPDATE_OBJ, UpdateObjectServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final UpdateObjectServerMessage updateObjectServerMessage = (UpdateObjectServerMessage) pServerMessage;
+//                    MainActivity.this.updateBullet(updateBulletServerMessage.mBulletID, updateBulletServerMessage.mX, updateBulletServerMessage.mY); TODO
+                }
+            });
+            
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_REMOVE_OBJ, RemoveObjectServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final RemoveObjectServerMessage removeObjectServerMessage = (RemoveObjectServerMessage) pServerMessage;
+//                    MainActivity.this.updateBullet(updateBulletServerMessage.mBulletID, updateBulletServerMessage.mX, updateBulletServerMessage.mY); TODO
+                }
+            });
+/*
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER, UpdatePlayerServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final UpdatePlayerServerMessage updatePlayerServerMessage = (UpdatePlayerServerMessage) pServerMessage;
+//                    MainActivity.this.updatePlayer(updatePlayerServerMessage.mPlayerID, updatePlayerServerMessage.mX, updatePlayerServerMessage.mY); TODO
+                }
+            });
+*/            
+        }
+
+        // ===========================================================
+        // Getter & Setter
+        // ===========================================================
+
+        // ===========================================================
+        // Methods for/from SuperClass/Interfaces
+        // ===========================================================
+
+        // ===========================================================
+        // Methods
+        // ===========================================================
+
+        // ===========================================================
+        // Inner and Anonymous Classes
+        // ===========================================================
+    }
+    
+    private class MainServerConnectorListener implements ISocketConnectionServerConnectorListener {
+        @SuppressWarnings("deprecation")
+        @Override
+        public void onStarted(final ServerConnector<SocketConnection> pServerConnector) {
+            try {
+                pServerConnector.sendClientMessage(new ConnectionEstablishClientMessage(PROTOCOL_VERSION));
+                Debug.d("Send ConnectionEstablishClientMessage");
+            }
+            catch(Exception e) {
+                Debug.e(e);
+            }
+            MainActivity.this.toastOnUiThread("CLIENT: Connected to server.", Toast.LENGTH_SHORT);
+        }
+
+        @Override
+        public void onTerminated(final ServerConnector<SocketConnection> pServerConnector) {
+            MainActivity.this.toastOnUiThread("CLIENT: Disconnected from Server.", Toast.LENGTH_SHORT);
+            MainActivity.this.finish();
+        }
+    }
+
+    private class MainClientConnectorListener implements ISocketConnectionClientConnectorListener {
+        @Override
+        public void onStarted(final ClientConnector<SocketConnection> pClientConnector) {
+            MainActivity.this.toastOnUiThread("SERVER: Client connected: " + pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress(), Toast.LENGTH_SHORT);
+        }
+
+        @Override
+        public void onTerminated(final ClientConnector<SocketConnection> pClientConnector) {
+            MainActivity.this.toastOnUiThread("SERVER: Client disconnected: " + pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress(), Toast.LENGTH_SHORT);
+        }
+    }
 }

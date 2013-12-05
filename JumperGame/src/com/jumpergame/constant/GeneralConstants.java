@@ -9,6 +9,11 @@ public interface GeneralConstants {
     
     public static final int GAME_WIDTH = 800;
     public static final int GAME_HEIGHT = 480;
+    public static final int CAMERA_WIDTH = GAME_WIDTH;
+    public static final int CAMERA_HEIGHT = GAME_HEIGHT;
+    
+    public static final float mGravityX = 0;
+    public static final float mGravityY = -10.0f;
     
     public static final int INITIAL_SCORE = 0;
     
@@ -31,6 +36,33 @@ public interface GeneralConstants {
     public static final int DIALOG_CHOOSE_SERVER_OR_CLIENT_ID = 0;
     public static final int DIALOG_ENTER_SERVER_IP_ID = DIALOG_CHOOSE_SERVER_OR_CLIENT_ID + 1;
     public static final int DIALOG_SHOW_SERVER_IP_ID = DIALOG_ENTER_SERVER_IP_ID + 1;
+    
+    /**
+     *   Sprite Names
+     */
+    
+    // Level loader
+    public static final String TAG_ENTITY = "entity";
+    public static final String TAG_ENTITY_ATTRIBUTE_X = "x";
+    public static final String TAG_ENTITY_ATTRIBUTE_Y = "y";
+    public static final String TAG_ENTITY_ATTRIBUTE_TYPE = "type";
+        
+    // Staircase
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1 = "platform1";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2 = "platform2";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3 = "platform3";
+    
+    // Stuff
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN        = "coin";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID        = "acid";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE        = "glue";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL        = "tool";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY      = "energy";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE   = "invisible";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE  = "invincible";
+    
+    // Player
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
     
     /**
      *   Collision Filtering      
