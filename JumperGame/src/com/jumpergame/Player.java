@@ -43,7 +43,7 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
          
      private String userdata;
      private Body body;
-     private int  velocityFactor = 8;
+     private int  velocityFactor = JUMP_VELOCITY_FACTOR;
      private boolean invincibleState = false;
      
      public abstract void onDie();
@@ -87,11 +87,11 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
          });
      }
 
-         });*/
-         animate(new long[]{ 200, 200 }, 0, 1, true);
-         setUserData(body);
-     }
-     
+	     });*/
+	     animate(new long[]{ 100, 100, 100, 100, 100, 100, 100, 100}, 0, 7, true);
+	     setUserData(body);
+	 }
+	 
 
      public void jump()
      {
@@ -134,14 +134,14 @@ public abstract class Player extends AnimatedSprite implements GeneralConstants
      
      public void slowDownEffect()
      {
-         velocityFactor = 1;
+         velocityFactor = JUMP_VELOCITY_FACTOR_SLOW;
          registerUpdateHandler(new TimerHandler(3f, new ITimerCallback() 
         {
             
             public void onTimePassed(final TimerHandler pTimerHandler) 
             {
                 unregisterUpdateHandler(pTimerHandler);
-                velocityFactor = 8;
+                velocityFactor = JUMP_VELOCITY_FACTOR;
             }
         }));
      }

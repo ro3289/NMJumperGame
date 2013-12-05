@@ -46,4 +46,5 @@ public class Item extends Sprite {
 	public ItemType getType(){
 		return itemType;
 	}
+
 }

@@ -7,8 +7,8 @@ import java.util.HashMap;
 import org.andengine.engine.handler.IUpdateHandler;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
-import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
+import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
 import org.andengine.extension.multiplayer.protocol.server.IClientMessageHandler;
 import org.andengine.extension.multiplayer.protocol.server.SocketServer;
@@ -18,30 +18,26 @@ import org.andengine.extension.multiplayer.protocol.server.connector.SocketConne
 import org.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector.ISocketConnectionClientConnectorListener;
 import org.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.andengine.extension.multiplayer.protocol.util.MessagePool;
-import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.extension.physics.box2d.util.constants.PhysicsConstants;
-import org.andengine.opengl.texture.region.ITiledTextureRegion;
-import org.andengine.opengl.texture.region.TiledTextureRegion;
-import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.debug.Debug;
-import org.andengine.util.math.MathUtils;
 
 import android.hardware.SensorManager;
 import android.util.SparseArray;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.jumpergame.Manager.SceneManager;
+import com.jumpergame.Scene.MultiplayerGameScene;
 import com.jumpergame.connection.client.ConnectionCloseClientMessage;
 import com.jumpergame.connection.client.ConnectionEstablishClientMessage;
 import com.jumpergame.connection.client.ConnectionPingClientMessage;
@@ -56,10 +52,6 @@ import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServe
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
 import com.jumpergame.connection.server.UpdateObjectServerMessage;
 import com.jumpergame.connection.server.UpdateScoreServerMessage;
-import com.jumpergame.Manager.ResourcesManager;
-import com.jumpergame.Manager.SceneManager;
-import com.jumpergame.Scene.MultiplayerGameScene;
-import com.jumpergame.body.Sprite_Body;
 import com.jumpergame.constant.ConnectionConstants;
 import com.jumpergame.constant.GeneralConstants;
 
