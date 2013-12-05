@@ -17,9 +17,11 @@ public interface ConnectionConstants {
     public static final short FLAG_MESSAGE_CLIENT_CONNECTION_PING = FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH + 1;
     
     /* Server --> Client */
-    public static final short FLAG_MESSAGE_SERVER_ADD_OBJ = 1;
-    public static final short FLAG_MESSAGE_SERVER_UPDATE_OBJ = FLAG_MESSAGE_SERVER_ADD_OBJ + 1;
-    public static final short FLAG_MESSAGE_SERVER_REMOVE_OBJ = FLAG_MESSAGE_SERVER_UPDATE_OBJ + 1;
+    public static final short FLAG_MESSAGE_SERVER_ADD_PLAYER = 1;
+    public static final short FLAG_MESSAGE_SERVER_ADD_OBJ = FLAG_MESSAGE_SERVER_ADD_PLAYER + 1;
+    public static final short FLAG_MESSAGE_SERVER_UPDATE_PLAYER = FLAG_MESSAGE_SERVER_ADD_OBJ + 1;
+    public static final short FLAG_MESSAGE_SERVER_UPDATE_OBJ = FLAG_MESSAGE_SERVER_UPDATE_PLAYER + 1;
+    public static final short FLAG_MESSAGE_SERVER_REMOVE_OBJ = FLAG_MESSAGE_SERVER_UPDATE_PLAYER + 1;
     public static final short FLAG_MESSAGE_SERVER_UPDATE_SCORE = FLAG_MESSAGE_SERVER_REMOVE_OBJ + 1;
 
     /* Client --> Server */

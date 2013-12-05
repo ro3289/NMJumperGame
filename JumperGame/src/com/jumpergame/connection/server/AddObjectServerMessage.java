@@ -20,9 +20,8 @@ public class AddObjectServerMessage extends ServerMessage implements ConnectionC
     public int mObjectId;
     public String mTextureName;
     public int mTiledNumber;
-    public int mX;
-    public int mY;
-    public int mIsFaceRight;
+    public float mX;
+    public float mY;
 
     // ===========================================================
     // Constructors
@@ -31,26 +30,24 @@ public class AddObjectServerMessage extends ServerMessage implements ConnectionC
     public AddObjectServerMessage() {
     }
 
-    public AddObjectServerMessage(final int pObjectId, final String pTextureName, final int pTiledNumber, final int pX, final int pY, final int pIsFaceRight) {
+    public AddObjectServerMessage(final int pObjectId, final String pTextureName, final int pTiledNumber, final float pX, final float pY) {
         this.mObjectId = pObjectId;
         this.mTextureName = pTextureName;
         this.mTiledNumber = pTiledNumber;
         this.mX = pX;
         this.mY = pY;
-        this.mIsFaceRight = pIsFaceRight;
     }
 
     // ===========================================================
     // Getter & Setter
     // ===========================================================
 
-    public void set(final int pObjectId, final String pTextureName, final int pTiledNumber, final int pX, final int pY, final int pIsFaceRight) {
+    public void set(final int pObjectId, final String pTextureName, final int pTiledNumber, final float pX, final float pY) {
         this.mObjectId = pObjectId;
         this.mTextureName = pTextureName;
         this.mTiledNumber = pTiledNumber;
         this.mX = pX;
         this.mY = pY;
-        this.mIsFaceRight = pIsFaceRight;
     }
 
     // ===========================================================
@@ -67,9 +64,8 @@ public class AddObjectServerMessage extends ServerMessage implements ConnectionC
         this.mObjectId = pDataInputStream.readInt();
         this.mTextureName = pDataInputStream.readUTF();
         this.mTiledNumber = pDataInputStream.readInt();
-        this.mX = pDataInputStream.readInt();
-        this.mY = pDataInputStream.readInt();
-        this.mIsFaceRight = pDataInputStream.readInt();
+        this.mX = pDataInputStream.readFloat();
+        this.mY = pDataInputStream.readFloat();
     }
 
     @Override
@@ -77,9 +73,8 @@ public class AddObjectServerMessage extends ServerMessage implements ConnectionC
         pDataOutputStream.writeInt(this.mObjectId);
         pDataOutputStream.writeUTF(this.mTextureName);
         pDataOutputStream.writeInt(this.mTiledNumber);
-        pDataOutputStream.writeInt(this.mX);
-        pDataOutputStream.writeInt(this.mY);
-        pDataOutputStream.writeInt(this.mIsFaceRight);
+        pDataOutputStream.writeFloat(this.mX);
+        pDataOutputStream.writeFloat(this.mY);
     }
 
     // ===========================================================

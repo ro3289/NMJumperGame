@@ -1,5 +1,6 @@
 package com.jumpergame;
 
+import org.andengine.entity.scene.Scene;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
@@ -23,27 +24,28 @@ public class BulletItem extends Item {
 	private final float velocityConstant;
 	private String bodyName;
 
-	public BulletItem(GameScene gc, PhysicsWorld pw, float pX, float pY, ItemType type, 
-			ITextureRegion pTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager) {
-		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager);
+	public BulletItem(Scene gc, PhysicsWorld pw, float pX, float pY, ItemType type, 
+			ITextureRegion pTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager, boolean online) {
+		super(gc, pX, pY, type, pTextureRegion, pVertexBufferObjectManager, online);
 		
 		// Correct initial bullet position
-		this.mX = gameScene.getUser().getX();
-		this.mY = gameScene.getUser().getY();
-		endX = pX;
-		endY = pY;
+		if (!isOnline) {
+	        this.mX = ((GameScene)gameScene).getUser().getX();
+	        this.mY = ((GameScene)gameScene).getUser().getY();  
+		}
 		
-		// Register physics handler
-		physicsWorld = pw;
-		bulletBody = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.KinematicBody, GeneralConstants.BULLET_FIXTURE_DEF);
-		setBodyName();
-		bulletBody.setUserData(new Sprite_Body(this, bodyName));
-		physicsWorld.registerPhysicsConnector(new PhysicsConnector(this, bulletBody, true, true));
-	    this.setUserData(bulletBody);
-	    
-	    // Determine velocity by type
-    	velocityConstant = (type == ItemType.BULLET) ? GeneralConstants.NORMAL_BULLET_VELOCITY : GeneralConstants.ITEM_BULLET_VELOCITY;
-	 
+        // Register physics handler
+        physicsWorld = pw;
+        bulletBody = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.KinematicBody, GeneralConstants.BULLET_FIXTURE_DEF);
+        setBodyName();
+        bulletBody.setUserData(new Sprite_Body(this, bodyName));
+        physicsWorld.registerPhysicsConnector(new PhysicsConnector(this, bulletBody, true, true));
+        this.setUserData(bulletBody);
+		
+        endX = pX;
+        endY = pY;
+		// Determine velocity by type
+        velocityConstant = (type == ItemType.BULLET) ? GeneralConstants.NORMAL_BULLET_VELOCITY : GeneralConstants.ITEM_BULLET_VELOCITY;
 	}
 
 	private void setBodyName() {
@@ -65,8 +67,10 @@ public class BulletItem extends Item {
 	}
 
 	public void shoot() {
-        gameScene.attachChild(this);
-        bulletBody.setLinearVelocity(bulletVelocity());
+	    if (!isOnline) {
+	        ((GameScene)gameScene).attachChild(this);
+	        bulletBody.setLinearVelocity(bulletVelocity());
+	    }
     }
 	
 	private Vector2 bulletVelocity() {
@@ -76,21 +80,25 @@ public class BulletItem extends Item {
         float v = (float) java.lang.Math.pow(java.lang.Math.pow(delX, 2) + java.lang.Math.pow(delY, 2), 0.5);
         return new Vector2(velocityConstant * delX / v, velocityConstant * delY / v);
     }
-	public void showBulletEffect()
-	{         	 
-		switch (itemType)
-	 	 {
-	 	 	case BULLET:
-	 	 		gameScene.setPlayerEnergy(1,0,-10);
-	     		 break;
-	     	case ACID:
-	     		gameScene.setPlayerEnergy(1,0,-50);
-	     		 break;
-	     	case GLUE:
-	     		gameScene.getOpponent().slowDownEffect();
-	     		 break;
-	     	default:
-	     		break;
-	 	 }
+	public void showBulletEffect() {         	 
+	    switch (itemType) {
+            case BULLET:
+                if (!isOnline) {
+                    ((GameScene)gameScene).setPlayerEnergy(1,0,-10);
+                    break;
+                }
+            case ACID:
+                if (!isOnline) {
+                    ((GameScene)gameScene).setPlayerEnergy(1,0,-50);
+                    break;
+                }
+            case GLUE:
+                if (!isOnline) {
+                    ((GameScene)gameScene).getOpponent().slowDownEffect();
+                    break;
+                }
+            default:
+                break;
+	    }
 	}
 }

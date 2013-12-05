@@ -53,9 +53,9 @@ public abstract class PlayerSprite extends Sprite implements GeneralConstants{
 	     private void createPhysics(final Camera camera, PhysicsWorld physicsWorld)
 	     {        
 	         if(playerType==1)
-	             body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, THIS_PLAYER_FIXTURE_DEF);
+	             body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, PLAYER_FIXTURE_DEF);
 	         else
-	             body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, OTHER_PLAYER_FIXTURE_DEF);
+	             body = PhysicsFactory.createBoxBody(physicsWorld, this, BodyType.DynamicBody, PLAYER_FIXTURE_DEF);
 	         body.setUserData(new Sprite_Body(this, userdata));
 	         body.setFixedRotation(true);
 	         
