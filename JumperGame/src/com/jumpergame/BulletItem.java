@@ -87,7 +87,7 @@ public class BulletItem extends Item {
 	     		gameScene.setPlayerEnergy(1,0,-50);
 	     		 break;
 	     	case GLUE:
-//	     		gameScene.getOpponent().slowDownEffect(); TODO
+	     		gameScene.getOpponent().slowDownEffect();
 	     		 break;
 	     	default:
 	     		break;
