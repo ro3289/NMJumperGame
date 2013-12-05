@@ -15,6 +15,7 @@ import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.ITouchArea;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
+import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
@@ -211,7 +212,7 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     }
     private void createStoreButton(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
     {   
-        Item item= new Item(this, x, y, type, itemTextureRegion, vbom); // TODO storeButtons
+        Item item= new Item(this, x, y, type, itemTextureRegion, vbom); // TODO storeItems
         /*
         {
              @Override
@@ -693,6 +694,41 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     // Methods
     // ===========================================================
     
+    private void addPlayer(final int playerID, final float initX, final float initY) {
+        System.out.println("Add player, id = "+playerID+"initX = "+initX+"initY = "+initY);
+        
+        if (thisID == playerID) return;
+        
+        final float centerX = CAMERA_WIDTH / 2;
+        final float centerY = CAMERA_HEIGHT / 2;
+        AnimatedSprite appearance;
+        
+        if (thisID == -1) {
+            thisID = playerID;
+            
+//            appearance = new AnimatedSprite(MathUtils.random(10, CAMERA_WIDTH-10), centerY, mBoxFaceTextureRegion, getVertexBufferObjectManager());
+            appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player_region, ResourcesManager.getInstance().vbom);
+            appearance.animate(new long[]{ 200, 200 }, 0, 1, true);
+            registerTouchArea(appearance);
+            attachChild(appearance);
+            
+            ResourcesManager.getInstance().camera.setChaseEntity(appearance);
+            
+//            Player_Client thisPlayer = new Player_Client(appearance, thisID);
+        }
+        else { // TODO: enemy appearance
+            appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player_region, ResourcesManager.getInstance().vbom);
+            appearance.animate(new long[]{ 200, 200 }, 0, 1, true);
+            registerTouchArea(appearance);
+            attachChild(appearance);
+        }
+        
+        mPlayers.append(playerID, new Player_Client(appearance, playerID));
+    }
+    
+    private void addObject(final int mObjectId, final String mTextureName, final float initX, final float initY) {
+//        swtich(mTextureName)
+    }
 
     private void computeScore() {
         /*
@@ -728,6 +764,10 @@ public class MultiplayerGameScene extends GameScene implements IOnSceneTouchList
     
     public ArrayList<Rectangle> getWalls() {
         return mWalls;
+    }
+    
+    public ArrayList<Sprite> getSprites() {
+        return mSprites;
     }
     
     /*

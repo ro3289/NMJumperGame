@@ -7,6 +7,8 @@ import java.util.HashMap;
 import org.andengine.engine.handler.IUpdateHandler;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
+import org.andengine.entity.sprite.Sprite;
+import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
@@ -114,11 +116,16 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         Vector2Pool.recycle(gravity);
         
         
-        for (Rectangle wall: ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).getWalls()) {
+        for (Rectangle wall : ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).getWalls()) {
             Body wallBody = PhysicsFactory.createBoxBody(mPhysicsWorld, wall, BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF);
             wallBody.setUserData("Wall");
             System.out.println("SERVER adds wall, Body_x = " + wallBody.getPosition().x + ", Body_y = " + wallBody.getPosition().y);
         }
+        
+        for (Sprite sprite : ((MultiplayerGameScene)SceneManager.getInstance().multiplayerScene).getSprites()) {
+            String type = (String) sprite.getUserData();
+        }
+        
         /*
         for (Ladder ladder : mMainActivity.getLadders()) {
             Body ladderBody = PhysicsFactory.createBoxBody(mPhysicsWorld, ladder.getRect(), BodyType.StaticBody, GROUND_AND_STAIR_FIXTURE_DEF);
