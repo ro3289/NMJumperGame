@@ -24,6 +24,8 @@ public interface GeneralConstants {
     
     public static final int FULL_ENERGY = 150;
     public static final int FULL_MAGAZINE_CAPACITY = 30;
+    public static final int JUMP_VELOCITY_FACTOR = 8;
+    public static final int JUMP_VELOCITY_FACTOR_SLOW = 1;
     
     public static final int NORMAL_BULLET_VELOCITY = 20;
     public static final int ITEM_BULLET_VELOCITY = 10;
