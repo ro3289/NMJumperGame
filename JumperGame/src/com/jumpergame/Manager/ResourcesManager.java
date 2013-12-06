@@ -155,7 +155,14 @@ public class ResourcesManager {
     
     private void loadMenuAudio()
     {
-        
+    	MusicFactory.setAssetBasePath("mfx/");
+		try {
+			mMenu = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "menu.mp3");
+			mMenu.setLooping(true);
+			
+		} catch (final IOException e) {
+			Debug.e(e);
+		}
     }
 
     private void loadMenuFonts()
@@ -278,7 +285,22 @@ public class ResourcesManager {
     
     private void loadGameAudio()
     {
-        
+
+    	MusicFactory.setAssetBasePath("mfx/");
+		try {
+			mMusic = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "Mega Man 8- Tengu Man's Stage.mp3");
+			mMusic.setLooping(true);
+			
+		} catch (final IOException e) {
+			Debug.e(e);
+		}
+		SoundFactory.setAssetBasePath("mfx/");
+		try {
+			mShoot = SoundFactory.createSoundFromAsset(engine.getSoundManager(), activity, "shoot.wav");
+			mDie = SoundFactory.createSoundFromAsset(engine.getSoundManager(), activity, "die.wav");
+		} catch (final IOException e) {
+			Debug.e(e);
+		}
     }
     
     public void loadSplashScreen()
