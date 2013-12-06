@@ -134,7 +134,7 @@ public class StoreItem extends Item {
             case INVINCIBLE_DRINK:
                 ((GameScene)gameScene).getUser().invincibleEffect();
                     break;
-                default:i
+                default:
                         break;
             }
             
