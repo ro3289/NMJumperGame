@@ -18,6 +18,8 @@ public class PlayerShootClientMessage extends ClientMessage implements Connectio
     // ===========================================================
 
     public int mPlayerID;
+    public int mBulletID;
+    public int mType;
     public float initVx;
     public float initVy;
 
@@ -29,16 +31,18 @@ public class PlayerShootClientMessage extends ClientMessage implements Connectio
 
     }
 
-    public PlayerShootClientMessage(final int pBulletID, final float iVx, final float iVy) {
-        set(pBulletID, iVx, iVy);
+    public PlayerShootClientMessage(final int pPlayerID, final int pBulletID, final int type, final float iVx, final float iVy) {
+        set(pPlayerID, pBulletID, type, iVx, iVy);
     }
 
     // ===========================================================
     // Getter & Setter
     // ===========================================================
 
-    public void set(final int pPlayerID, final float iVx,final float iVy) {
+    public void set(final int pPlayerID, final int pBulletID, final int type, final float iVx, final float iVy) {
         mPlayerID = pPlayerID;
+        mBulletID = pBulletID;
+        mType = type;
         initVx = iVx;
         initVy = iVy;
     }
@@ -55,6 +59,8 @@ public class PlayerShootClientMessage extends ClientMessage implements Connectio
     @Override
     protected void onReadTransmissionData(DataInputStream pDataInputStream) throws IOException {
         mPlayerID = pDataInputStream.readInt();
+        mBulletID = pDataInputStream.readInt();
+        mType = pDataInputStream.readInt();
         initVx = pDataInputStream.readFloat();
         initVy = pDataInputStream.readFloat();
     }
@@ -62,6 +68,8 @@ public class PlayerShootClientMessage extends ClientMessage implements Connectio
     @Override
     protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
         pDataOutputStream.writeInt(mPlayerID);
+        pDataOutputStream.writeInt(mBulletID);
+        pDataOutputStream.writeInt(mType);
         pDataOutputStream.writeFloat(initVx);
         pDataOutputStream.writeFloat(initVy);
     }

@@ -18,10 +18,8 @@ public class PlayerJumpClientMessage extends ClientMessage implements Connection
     // ===========================================================
 
     public int mPlayerID;
-    public float initX;
-    public float initY;
-    public float endX;
-    public float endY;
+    public float vX;
+    public float vY;
 
     // ===========================================================
     // Constructors
@@ -31,20 +29,18 @@ public class PlayerJumpClientMessage extends ClientMessage implements Connection
 
     }
 
-    public PlayerJumpClientMessage(final int pPlayerID, final float iX, final float iY, final float eX, final float eY) {
-        set(pPlayerID, iX, iY, eX, eY);
+    public PlayerJumpClientMessage(final int pPlayerID, final float iX, final float iY) {
+        set(pPlayerID, iX, iY);
     }
 
     // ===========================================================
     // Getter & Setter
     // ===========================================================
 
-    public void set(final int pPlayerID, final float iX, final float iY, final float eX, final float eY) {
+    public void set(final int pPlayerID, final float iX, final float iY) {
         mPlayerID = pPlayerID;
-        initX = iX;
-        initY = iY;
-        endX = eX;
-        endY = eY;
+        vX = iX;
+        vY = iY;
     }
 
     // ===========================================================
@@ -59,19 +55,15 @@ public class PlayerJumpClientMessage extends ClientMessage implements Connection
     @Override
     protected void onReadTransmissionData(DataInputStream pDataInputStream) throws IOException {
         mPlayerID = pDataInputStream.readInt();
-        initX = pDataInputStream.readFloat();
-        initY = pDataInputStream.readFloat();
-        endX = pDataInputStream.readFloat();
-        endY = pDataInputStream.readFloat();
+        vX = pDataInputStream.readFloat();
+        vY = pDataInputStream.readFloat();
     }
 
     @Override
     protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
         pDataOutputStream.writeInt(mPlayerID);
-        pDataOutputStream.writeFloat(initX);
-        pDataOutputStream.writeFloat(initY);
-        pDataOutputStream.writeFloat(endX);
-        pDataOutputStream.writeFloat(endY);
+        pDataOutputStream.writeFloat(vX);
+        pDataOutputStream.writeFloat(vY);
     }
 
     // ===========================================================

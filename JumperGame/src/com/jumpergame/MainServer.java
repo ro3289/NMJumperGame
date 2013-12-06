@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.andengine.engine.handler.IUpdateHandler;
+import org.andengine.entity.IEntity;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
@@ -43,26 +44,30 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Scene.MultiplayerGameScene;
+import com.jumpergame.body.Sprite_Body;
 import com.jumpergame.connection.client.ConnectionCloseClientMessage;
 import com.jumpergame.connection.client.ConnectionEstablishClientMessage;
 import com.jumpergame.connection.client.ConnectionPingClientMessage;
 import com.jumpergame.connection.client.PlayerJumpClientMessage;
 import com.jumpergame.connection.client.PlayerShootClientMessage;
+import com.jumpergame.connection.client.PlayerUpdateMoneyClientMessage;
 import com.jumpergame.connection.client.PlayerUseItemClientMessage;
 import com.jumpergame.connection.server.AddObjectServerMessage;
 import com.jumpergame.connection.server.AddPlayerServerMessage;
+import com.jumpergame.connection.server.BulletEffectServerMessage;
 import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
 import com.jumpergame.connection.server.ConnectionMainServerMessage;
 import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
+import com.jumpergame.connection.server.UpdateMoneyServerMessage;
 import com.jumpergame.connection.server.UpdateObjectServerMessage;
 import com.jumpergame.connection.server.UpdatePlayerServerMessage;
 import com.jumpergame.connection.server.UpdateScoreServerMessage;
 import com.jumpergame.constant.ConnectionConstants;
 import com.jumpergame.constant.GeneralConstants;
 
-public class MainServer extends SocketServer<SocketConnectionClientConnector> implements IUpdateHandler, ContactListener, GeneralConstants, ConnectionConstants {
+public class MainServer extends SocketServer<SocketConnectionClientConnector> implements IUpdateHandler, GeneralConstants, ConnectionConstants {
     
     // ===========================================================
     // Constants
@@ -100,7 +105,6 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         
         mPhysicsWorld = new PhysicsWorld(new Vector2(0, SensorManager.GRAVITY_EARTH), false);
 //        mPhysicsWorld = new FixedStepPhysicsWorld(FPS, 2, new Vector2(0, 0), false, 8, 8);
-        mPhysicsWorld.setContactListener(this);
         
         initPhysics();
     }
@@ -154,12 +158,125 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
             System.out.println("SERVER adds ladder, Body_x = " + ladderBody.getPosition().x + ", Body_y = " + ladderBody.getPosition().y);
         }
         */
+        
+        mPhysicsWorld.setContactListener(contactListener());
     }
 
     // ===========================================================
     // Getter & Setter
     // ===========================================================
 
+    private ContactListener contactListener()
+    {
+        ContactListener contactListener = new ContactListener()
+        {
+            boolean AisBullet = false;
+            boolean BisBullet = false;
+            
+            public void beginContact(Contact contact)
+            {
+                final Fixture x1 = contact.getFixtureA();
+                final Fixture x2 = contact.getFixtureB();
+                final Body BodyA = x1.getBody();
+                final Body BodyB = x2.getBody();
+                final float densityA = x1.getDensity();
+                final float densityB = x2.getDensity();
+
+                String userDataA = (String) BodyA.getUserData();
+                String userDataB = (String) BodyB.getUserData();
+                
+                String bulletAData[] = userDataA.split(" ");
+                String bulletBData[] = userDataB.split(" ");
+                
+                AisBullet = (bulletAData.length == 3);
+                
+                BisBullet = (bulletBData.length == 3);
+                
+                if (AisBullet && IP_PlayerID.containsKey(userDataB)) {
+                    if (bulletAData[1] != userDataB) {
+                        final int mBulletID = Integer.parseInt(bulletAData[2]);
+                        
+                        final BulletEffectServerMessage bulletEffectServerMessage = new BulletEffectServerMessage();
+                        bulletEffectServerMessage.set(mBulletID, bulletAData[0]);
+                        try {
+                            sendBroadcastServerMessage(bulletEffectServerMessage);
+                        } catch (IOException e) {
+                            Debug.e(e);
+                        }
+                        
+//                        ((BulletItem) userDataB.getEntity()).showBulletEffect(); TODO send msg to C !!
+                        removeBody(BodyB);
+                        System.out.println("attack");
+                        BodyA.setLinearVelocity(new Vector2(0,0));
+//                        BodyA.applyForce(0, 0, BodyA.getX(), BodyA.getY()); // TODO ???
+                    }
+                    
+                }
+                
+                if (BisBullet && IP_PlayerID.containsKey(userDataA)) {
+                    if (bulletBData[1] != userDataA) {
+                        final int mBulletID = Integer.parseInt(bulletBData[2]);
+//                      ((BulletItem) userDataB.getEntity()).showBulletEffect(); TODO send msg to C !!
+                        removeBody(BodyA);
+                        System.out.println("attack");
+                        BodyB.setLinearVelocity(new Vector2(0,0));
+                    }
+                    
+                }
+
+                if (x1.getBody() != null && x2.getBody() != null) {
+                    if(densityA ==2 || densityB == 2) {
+                        Player_Server player;
+                        if (densityA == 2) {
+                            player = mPlayerBodies.get(IP_PlayerID.get(userDataB));
+                        }
+                        else {
+                            player = mPlayerBodies.get(IP_PlayerID.get(userDataA));
+                        }
+                        
+                        Vector2 tmp=player.getBody().getLinearVelocity();
+                        if(tmp.y<0)
+                        {
+                            
+//                        computeScore(); TODO compute score 
+                        System.out.println("Contact");                        
+                            
+                        Vector2 bodyVector = new Vector2(player.getBody().getPosition().x, player.getBody().getPosition().y);
+                        Vector2 forceVector = new Vector2(0,0);
+                        player.getBody().applyForce(forceVector, bodyVector);
+                        Vector2 velocity = new Vector2(0,0);
+                        player.getBody().setLinearVelocity(velocity);
+                    //  Vector2Pool.recycle(velocity); // Error message: more items recycled than obtained
+                        player.setJumpState(false);
+                        }
+                    }
+                }
+            }
+
+            public void endContact(Contact contact)
+            {
+            }
+
+            public void preSolve(Contact contact, Manifold oldManifold)
+            {
+
+            }
+
+            public void postSolve(Contact contact, ContactImpulse impulse)
+            {
+                /*
+                final Fixture x1 = contact.getFixtureA();
+                final Fixture x2 = contact.getFixtureB();
+                if(checkBullet){
+                    x1.getBody().setLinearVelocity(new Vector2(0,0));
+                    x1.getBody().applyForce(0, 0, dummy.getX(), dummy.getY());
+                }
+                */
+            }
+        };
+        return contactListener;
+    }
+    
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -200,7 +317,8 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
             final float playerX = playerPosition.x * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - ResourcesManager.getInstance().player_region.getWidth()/2;  //PADDLE_WIDTH_HALF;
             final float playerY = playerPosition.y * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - ResourcesManager.getInstance().player_region.getHeight()/2;//PADDLE_HEIGHT_HALF;
             
-            System.out.println("update player, x = " + playerX + ", y = " + playerY);
+            if (player.getJumpState())
+                System.out.println("update player, x = " + playerX + ", y = " + playerY+", jState = "+player.getJumpState());
 
             final UpdatePlayerServerMessage updatePlayerServerMessage = (UpdatePlayerServerMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER);
             updatePlayerServerMessage.set(player.getPlayerID(), playerX, playerY);
@@ -232,59 +350,6 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         // TODO leave it blank?
         
     }
-    
-    @Override
-    public void beginContact(Contact pContact) {
-        System.out.println("contacted!!");
-        
-        final Fixture x1 = pContact.getFixtureA();
-        final Fixture x2 = pContact.getFixtureB();
-        final Body BodyA = x1.getBody();
-        final Body BodyB = x2.getBody();
-        final float densityA = x1.getDensity();
-        final float densityB = x2.getDensity();
-//        Sprite_Body userDataA = (Sprite_Body) BodyA.getUserData();
-//        Sprite_Body userDataB = (Sprite_Body) BodyB.getUserData();
-        
-        /*
-        if(userDataA.getName() == "Wall" && userDataB.getName() == "Bullet") {
-            MainActivity.this.removeEntity((IEntity) mBullets.get(userDataB.getEntity().getUserData()));
-        } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "Wall") {
-            MainActivity.this.removeEntity((IEntity) mBullets.get(userDataA.getEntity().getUserData()));
-        }
-        
-        if(userDataA.getName() == "otherPlayer" && userDataB.getName() == "Bullet") {
-            MainActivity.this.removeEntity((IEntity) mBullets.get(userDataB.getEntity().getUserData()));
-            MainActivity.this.setPlayerEnergy(1, 0, -10);
-        } else if(userDataA.getName() == "Bullet" && userDataB.getName() == "otherPlayer") {
-            MainActivity.this.removeEntity((IEntity) mBullets.get(userDataA.getEntity().getUserData()));
-            MainActivity.this.setPlayerEnergy(1, 0, -10);
-        }
-        
-        if (x1.getBody() != null && x2.getBody() != null && jumpState) {
-            if(densityA ==2 || densityB == 2) {
-                computeScore();
-                System.out.println("Contact");
-                Vector2 bodyVector = new Vector2(thisPlayer.getBody().getPosition().x, thisPlayer.getBody().getPosition().y);
-                Vector2 forceVector = new Vector2(0,0);
-                thisPlayer.getBody().applyForce(forceVector, bodyVector);
-                Vector2 velocity = new Vector2(0,0);
-                thisPlayer.getBody().setLinearVelocity(velocity);
-            //  Vector2Pool.recycle(velocity); // Error message: more items recycled than obtained
-                jumpState = false;
-            }
-        }
-        */
-    }
-
-    @Override
-    public void endContact(Contact contact) {}
-
-    @Override
-    public void preSolve(Contact contact, Manifold oldManifold) {}
-
-    @Override
-    public void postSolve(Contact contact, ContactImpulse impulse) {}
 
     @Override
     protected SocketConnectionClientConnector newClientConnector(
@@ -363,7 +428,11 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
             @Override
             public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
                 final PlayerJumpClientMessage playerJumpClientMessage = (PlayerJumpClientMessage)pClientMessage;
-                // TODO jump
+                jump(
+                    playerJumpClientMessage.mPlayerID,
+                    playerJumpClientMessage.vX,
+                    playerJumpClientMessage.vY
+                );
             }
         });
         
@@ -371,6 +440,14 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
             @Override
             public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
                 // TODO shoot
+                final PlayerShootClientMessage playerShootClientMessage = (PlayerShootClientMessage)pClientMessage;
+                shoot(
+                    playerShootClientMessage.mPlayerID,
+                    playerShootClientMessage.mBulletID,
+                    playerShootClientMessage.mType,
+                    playerShootClientMessage.initVx,
+                    playerShootClientMessage.initVy
+                );
             }
         });
         
@@ -378,6 +455,21 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
             @Override
             public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
                 // TODO useItem
+            }
+        });
+        
+        clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_UPDATE_MONEY, PlayerUpdateMoneyClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+            @Override
+            public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
+                final PlayerUpdateMoneyClientMessage playerUpdateMoneyClientMessage = (PlayerUpdateMoneyClientMessage) pClientMessage;
+                final int id = playerUpdateMoneyClientMessage.mPlayerID;
+                final int deltaMoney = playerUpdateMoneyClientMessage.deltaMoney;
+                Player_Server p = mPlayerBodies.get(id);
+                
+                p.setMoney(deltaMoney + p.getMoney());
+                final int newMoney = p.getMoney();
+                
+                sendBroadcastServerMessage(new UpdateMoneyServerMessage(id, newMoney));
             }
         });
         
@@ -410,15 +502,44 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         return newID;
     }
     
-    private synchronized int shoot() {
-        return 0;
+    private synchronized void shoot(int mPlayerID, int mBulletID, int mType, float initVx, float initVy) {
+        Body bulletBody = PhysicsFactory.createBoxBody(mPhysicsWorld, (IEntity) ResourcesManager.getInstance().normal_bullet_region, BodyType.KinematicBody, BULLET_FIXTURE_DEF);
+        String attackerIP = mPlayerBodies.get(mPlayerID).IP;
+        
+        switch (mType)
+        {
+            case 0:
+                bulletBody.setUserData("BULLET " + attackerIP + " " + mBulletID);
+                break;
+            case 1:
+                bulletBody.setUserData("ACID " + attackerIP + " " + mBulletID);
+                break;
+            case 2:
+                bulletBody.setUserData("GLUE " + attackerIP + " " + mBulletID);
+                break;
+            default:
+                bulletBody.setUserData("");
+                break;
+        }
+        
+        bulletBody.setLinearVelocity(initVx, initVy);
     }
     
-    private synchronized void jump() {
-        
+    private synchronized void jump(int mPlayerID, float vX, float vY) {
+        Player_Server player = mPlayerBodies.get(mPlayerID);
+        if (!player.getJumpState()) {
+            player.getBody().setLinearVelocity(vX, vY);
+            player.setJumpState(true);
+        }
     }
     
-    private synchronized void removeBody(Body body) {
-        
+    private synchronized void removeBody(final Body body) {
+        ResourcesManager.getInstance().activity.runOnUpdateThread(new Runnable() {
+            @Override
+            public void run() {
+                mPhysicsWorld.destroyBody(body);
+                System.gc();
+            }
+        });
     }
 }

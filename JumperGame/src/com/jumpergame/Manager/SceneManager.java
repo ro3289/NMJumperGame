@@ -166,6 +166,7 @@ public class SceneManager
     
     public void loadMultiPlayerScene(final Engine mEngine)
     {
+        System.out.println("start load multi...");
         setScene(loadingScene);
         ResourcesManager.getInstance().unloadMenuTextures();
         mEngine.registerUpdateHandler(new TimerHandler(0.1f, new ITimerCallback() 
@@ -178,5 +179,6 @@ public class SceneManager
                 setScene(multiplayerScene);
             }
         }));
+        System.out.println("...load multi succeeded");
     }
 }
