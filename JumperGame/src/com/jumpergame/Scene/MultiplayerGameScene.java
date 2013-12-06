@@ -19,6 +19,7 @@ import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
+import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
@@ -31,6 +32,7 @@ import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.SAXUtils;
 import org.andengine.util.adt.align.HorizontalAlign;
+import org.andengine.util.debug.Debug;
 import org.andengine.util.level.EntityLoader;
 import org.andengine.util.level.constants.LevelConstants;
 import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
@@ -55,6 +57,7 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.jumpergame.BulletItem;
 import com.jumpergame.Item;
 import com.jumpergame.Item.ItemType;
+import com.jumpergame.MainActivity;
 import com.jumpergame.Player;
 import com.jumpergame.Player_Client;
 import com.jumpergame.StoreItem;
@@ -62,6 +65,10 @@ import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
 import com.jumpergame.body.Sprite_Body;
+import com.jumpergame.connection.client.PlayerJumpClientMessage;
+import com.jumpergame.connection.client.PlayerShootClientMessage;
+import com.jumpergame.connection.client.PlayerUpdateMoneyClientMessage;
+import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.constant.GeneralConstants;
 
 
@@ -74,7 +81,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     private SparseArray<Text> mScoreTextMap;
     // Money
 //    private Text moneyText;
-    private SparseArray<Text> mMoneyTextMap;
+    public SparseArray<Text> mMoneyTextMap;
     
     //bullets
 //    private final HashMap<Integer, Rectangle> mBullets = new HashMap<Integer, Rectangle>();
@@ -86,7 +93,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     private Vector2 endVector;
 
     private SparseArray<Player_Client> mPlayers;
-    private int thisID;
+    public int thisID;
     private Sprite mArrow;
     private int mBulletCount = 0;
     
@@ -96,6 +103,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
 //    private float mGravityX = 0;
 //    private float mGravityY = -10.0f;
     
+    public int money = 0;
 
     // Item
     private Item dragItem;
@@ -107,6 +115,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     //private ArrayList<Fixture> f;
     public ArrayList<Rectangle> mWalls;
     private ArrayList<Sprite> mSprites;
+    public SparseArray<Item> mBullets = new SparseArray<Item>();
     private ArrayList<ArrayList<Fixture>> ff;
     public Rectangle mGround;
     
@@ -115,15 +124,6 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
         mScoreTextMap = new SparseArray<Text>();
 
         // Set Score 
-        Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
-        thisScoreText.setAnchorCenter(0, 0); 
-        gameHUD.attachChild(thisScoreText);
-//        mScoreTextMap.put(thisID, thisScoreText); TODO: remember put these texts into users when ADD_PLAYER 
-        // Set Money
-        Text thisMoneyText = new Text(250, 720, resourcesManager.mScoreFont, "Money: 0", 20, new TextOptions(HorizontalAlign.RIGHT), vbom);
-        thisMoneyText.setAnchorCenter(0, 0);
-        gameHUD.attachChild(thisMoneyText);
-//        mMoneyTextMap.put(thisID, thisMoneyText);
         /**
          *   energy
          */
@@ -215,8 +215,8 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     }
     private void createStoreButton(final float x, final float y, final ItemType type,final ITextureRegion itemTextureRegion)
     {   
-        Item item= new Item(this, x, y, type, itemTextureRegion, vbom, true); // TODO storeItems
-        /*
+        Item item= new Item(this, x, y, type, itemTextureRegion, vbom, true)
+
         {
              @Override
             public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
@@ -229,7 +229,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                         registerEntityModifier(new ScaleModifier((float) 0.1, 1, 0.8f));
                     }
                     else{
-                        if (getThisPlayer().getMoney()  > 0)
+                        if (money > 0)
                         {
                             buyItem = true;
                             registerEntityModifier(new ScaleModifier((float) 0.1, 1, 1.2f));
@@ -241,7 +241,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                 return true;
             };
                 
-        };*/
+        };
         gameHUD.registerTouchArea(item);
         gameHUD.attachChild(item);
     }
@@ -297,6 +297,20 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     {
         camera.setHUD(null);
         camera.setCenter(240, 400);
+        
+        MainActivity a = ResourcesManager.getInstance().activity;
+        if(a.mServer != null) {
+            try {
+                a.mServer.sendBroadcastServerMessage(new ConnectionCloseServerMessage());
+            } catch (final IOException e) {
+                Debug.e(e);
+            }
+            a.mServer.terminate();
+        }
+        
+        if(a.mServerConnector != null) {
+            a.mServerConnector.terminate();
+        }
 
         // TODO code responsible for disposing scene
         // removing all game scene objects.
@@ -445,19 +459,29 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
             }
 
             private Sprite createFloatingItem( int x, int y, final ItemType type, ITextureRegion region) {
-                Sprite object = new Item(gc, x, y, type, region, vbom, true);
-                /*
+                Sprite object = new Item(gc, x, y, type, region, vbom, true)
+                
                 {
                      @Override
-                     protected void onManagedUpdate(float pSecondsElapsed) 
+                     protected void onManagedUpdate(float pSecondsElapsed)
                      {
                          super.onManagedUpdate(pSecondsElapsed);
                          
+                         if (gc.getThisPlayer() != null) {
                          if (gc.getThisPlayer().getAppearance().collidesWith(this))
                          {
                              if(type == ItemType.COIN)
                              {
-                                 gc.plusPlayerMoney(500);
+//                                 gc.plusPlayerMoney(500);
+                                 money += 500;
+                                 PlayerUpdateMoneyClientMessage pClientMessage = new PlayerUpdateMoneyClientMessage();
+                                 pClientMessage.set(thisID, 500);
+                                 try {
+                                    ResourcesManager.getInstance().activity.mServerConnector.sendClientMessage(pClientMessage);
+                                } catch (IOException e) {
+                                    Debug.e(e);
+                                }
+                                 
                              }
                              else
                              {
@@ -467,9 +491,10 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                              this.setVisible(false);
                              this.setIgnoreUpdate(true);
                          }
+                         }
                      }
                 };
-                */
+                
                 
                 return object;
             }
@@ -492,14 +517,13 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
             camera.convertSceneTouchEventToCameraSceneTouchEvent(pSceneTouchEvent);
         }
         
-        /*
-        if(physicsWorld != null ) { TODO: physics
+        
             
             if(pSceneTouchEvent.isActionDown() && dragItem == null) {   
                 // Record initial position
                 initVector = new Vector2(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
                 // Show Direction
-                mArrow.setPosition(getThisPlayer().getX(), getThisPlayer().getY() +40 );
+                mArrow.setPosition(getThisPlayer().getAppearance().getX(), getThisPlayer().getAppearance().getY() +40 );
                 activity.runOnUpdateThread(new Runnable() {
                     @Override
                     public void run() {
@@ -507,8 +531,9 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                     }
                 });
             }
+            
             else if (pSceneTouchEvent.isActionUp()) {
-                if(!jumpState) {
+
                     if(dragItem == null)
                     {
                         // Eject object
@@ -516,25 +541,40 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                         final float deltaY = initVector.y - pSceneTouchEvent.getY();
                         if (deltaX < 20.0 && deltaY < 20.0) {
                             // shoot(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-                            BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
-                                                               ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom);
-                            bullet.shoot();
+                            BulletItem bullet = new BulletItem(this, null, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
+                                                               ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom, true);
+                            
+                            final int bID = mBulletCount++;
+                            mBullets.append(bID, bullet);
+                            bullet.id = bID;
+                            
+                            try {
+                                bullet.shoot();
+                            } catch (IOException e) {
+                                Debug.e(e);
+                            }
                         } else {
                             endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
                             final float velocityX = endVector.x;
                             final float velocityY = endVector.y;
-                            final int velocityFactor = getThisPlayer().getVelocityFactor();
+                            final int velocityFactor = JUMP_VELOCITY_FACTOR;
                             final Vector2 velocity = Vector2Pool.obtain(velocityFactor * velocityX *0.01f, velocityFactor * velocityY * 0.01f*0.35f);
-                            //float impulse = player.returnBody().getMass() * 10;
-                            //player.returnBody().ApplyLinearImpulse( b2Vec2(0,impulse), body->GetWorldCenter() );
-                            getThisPlayer().returnBody().setLinearVelocity(velocity);
+                            
+                            IClientMessage pClientMessage = new PlayerJumpClientMessage(thisID, velocity.x, velocity.y);
+                            
+                            try {
+                                ResourcesManager.getInstance().activity.mServerConnector.sendClientMessage(pClientMessage);
+                            } catch (IOException e) {
+                                Debug.e(e);
+                            }
+                            
+//                            getThisPlayer().returnBody().setLinearVelocity(velocity);
                             Vector2Pool.recycle(velocity);
                         // Record initial jump position
-                            initBodyVector = new Vector2(getThisPlayer().returnBody().getPosition().x, getThisPlayer().returnBody().getPosition().y);
-                            jumpState    = true;
+//                            initBodyVector = new Vector2(getThisPlayer().returnBody().getPosition().x, getThisPlayer().returnBody().getPosition().y);
                         }
                     }
-                }
+
                 // Item 
                 if(dragItem != null)
                 {
@@ -550,7 +590,6 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                         detachChild(mArrow);
                     }
                 });
-                return true;
             }
             else if(pSceneTouchEvent.isActionMove()) {
                 if(dragItem == null) // Problem here when store items used!!!!!
@@ -569,105 +608,8 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
             }
             
             return true;
-        }
-        */
-        return false;
     }
 
-    private ContactListener contactListener()
-    {
-        ContactListener contactListener = new ContactListener()
-        {
-            boolean checkBullet = false;
-            
-            public void beginContact(Contact contact)
-            {
-                final Fixture x1 = contact.getFixtureA();
-                final Fixture x2 = contact.getFixtureB();
-                final Body BodyA = x1.getBody();
-                final Body BodyB = x2.getBody();
-                final float densityA = x1.getDensity();
-                final float densityB = x2.getDensity();
-
-//                Sprite_Body userDataA = (Sprite_Body) BodyA.getUserData();
-//                Sprite_Body userDataB = (Sprite_Body) BodyB.getUserData();
-                
-                /*
-                
-                    System.out.println("A: " + userDataA.getName());
-                    System.out.println("B: " + userDataB.getName());
-                    
-                checkBullet = (userDataB.getName().equals("BULLET") || 
-                                        userDataB.getName().equals("ACID") || 
-                                        userDataB.getName().equals("GLUE"))? true : false; 
-                
-                if (userDataA.getName().equals("dummy") && checkBullet)
-                {
-                    
-                    ((BulletItem) userDataB.getEntity()).showBulletEffect();
-                    removeBullet(userDataB.getEntity());
-                    System.out.println("attack");
-                    BodyA.setLinearVelocity(new Vector2(0,0));
-                    BodyA.applyForce(0, 0, dummy.getX(), dummy.getY());
-                }
-                
-
-                if (x1.getBody() != null && x2.getBody() != null) {
-
-                    if(densityA ==2 || densityB == 2) {
-                        Vector2 tmp=player.returnBody().getLinearVelocity();
-                        if(tmp.y<0)
-                        {
-                            
-                        computeScore();
-                        System.out.println("Contact");                        
-                            
-                        Vector2 bodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
-                        Vector2 forceVector = new Vector2(0,0);
-                        player.returnBody().applyForce(forceVector, bodyVector);
-                        Vector2 velocity = new Vector2(0,0);
-                        player.returnBody().setLinearVelocity(velocity);
-                    //  Vector2Pool.recycle(velocity); // Error message: more items recycled than obtained
-                        jumpState = false;
-                        }
-                    }
-                }
-                */
-            }
-
-            public void endContact(Contact contact)
-            {
-                final Fixture x1 = contact.getFixtureA();
-                final Fixture x2 = contact.getFixtureB();
-
-                if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null)
-                {
-                    if (x2.getBody().getUserData().equals("player"))
-                    {
-                      //  player.decreaseFootContacts();
-                    }
-                }
-            }
-
-            public void preSolve(Contact contact, Manifold oldManifold)
-            {
-
-            }
-
-            public void postSolve(Contact contact, ContactImpulse impulse)
-            {
-                /*
-                final Fixture x1 = contact.getFixtureA();
-                final Fixture x2 = contact.getFixtureB();
-                if(checkBullet){
-                    x1.getBody().setLinearVelocity(new Vector2(0,0));
-                    x1.getBody().applyForce(0, 0, dummy.getX(), dummy.getY());
-                }
-                */
-            }
-        };
-        return contactListener;
-    }
     @Override
     public boolean onAreaTouched(TouchEvent pSceneTouchEvent,
             ITouchArea pTouchArea, float pTouchAreaLocalX,
@@ -704,6 +646,16 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
         }
         
         mPlayers.append(playerID, new Player_Client(appearance, playerID));
+        
+        Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+        thisScoreText.setAnchorCenter(0, 0); 
+        gameHUD.attachChild(thisScoreText);
+        mScoreTextMap.put(thisID, thisScoreText);
+        // Set Money
+        Text thisMoneyText = new Text(250, 720, resourcesManager.mScoreFont, "Money: 0", 20, new TextOptions(HorizontalAlign.RIGHT), vbom);
+        thisMoneyText.setAnchorCenter(0, 0);
+        gameHUD.attachChild(thisMoneyText);
+        mMoneyTextMap.put(thisID, thisMoneyText);
     }
     
     private void addObject(final int mObjectId, final String mTextureName, final float initX, final float initY) { // TODO maybe we don't need it XD 
@@ -892,14 +844,17 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     }
     @Override
     public void onAccelerationAccuracyChanged(AccelerationData pAccelerationData) {
-        // TODO Auto-generated method stub
         
     }
     public void setPlayerID(int pID) {
         thisID = pID;
     }
     public void updatePlayer(int mPlayerID, float mX, float mY) {
-        mPlayers.get(mPlayerID).getAppearance().setPosition(mX, mY);
+        try {
+            mPlayers.get(mPlayerID).getAppearance().setPosition(mX, mY);
+        } catch (NullPointerException e) {
+            
+        }
     }
     
     

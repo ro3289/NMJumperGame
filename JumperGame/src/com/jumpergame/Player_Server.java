@@ -21,26 +21,32 @@ public class Player_Server implements GeneralConstants {
     // Fields
     // ===========================================================
     
-    private String IP;
+    public String IP;
     private int pID;
     private int oID;
     private int score;
     private int energy;
     private int bulletNum;
     
+    private boolean jumpstate;
+    
 //    private AnimatedSprite appearance;
     private Body body;
 //    private Rectangle energyBar;
+    private int money;
     
     // ===========================================================
     // Constructors
     // ===========================================================
     
     public Player_Server(String ip) {
+        jumpstate = false;
+        
         IP = ip;
         score = INITIAL_SCORE;
         energy = FULL_ENERGY;
         bulletNum = FULL_MAGAZINE_CAPACITY;
+        money = 0;
     }
     
     @Deprecated
@@ -107,6 +113,24 @@ public class Player_Server implements GeneralConstants {
     
     public void setBody(Body b) {
         body = b;
+    }
+    
+    public boolean getJumpState() {
+        return jumpstate;
+    }
+    
+    public void setJumpState(boolean jState) {
+        jumpstate = jState;
+    }
+
+    public int getMoney() {
+        // TODO Auto-generated method stub
+        return money;
+    }
+
+    public void setMoney(int i) {
+        // TODO Auto-generated method stub
+        money = i;
     }
     
     /*

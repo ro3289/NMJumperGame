@@ -27,6 +27,7 @@ import org.andengine.input.touch.TouchEvent;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.util.SAXUtils;
 import org.andengine.util.adt.align.HorizontalAlign;
+import org.andengine.util.debug.Debug;
 import org.andengine.util.level.EntityLoader;
 import org.andengine.util.level.constants.LevelConstants;
 import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
@@ -543,7 +544,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        	if( dragItem != null)
 		        	{
 			        	System.out.println("Dummy attacked!");
-			        	currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+			        	try {
+                            currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+                        } catch (IOException e) {
+                            Debug.e(e);
+                        }
 			        	currentDragItem = null;
 			        	gameHUD.detachChild(dragItem);
 			        	dragItem.dispose();
@@ -556,8 +561,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		        	else
 		        	{
 		        		BulletItem bullet = new BulletItem(gc, physicsWorld, this.getX(), this.getY(), ItemType.BULLET, resourcesManager.normal_bullet_region, vbom, false);
-		        		bullet.shoot();
-		        		
+		        		try {
+                            bullet.shoot();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
 		        	}
 		        }
 		        return true;
@@ -599,8 +608,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                    if (deltaX < 10.0 && deltaY < 10.0) {
 	                    	BulletItem bullet = new BulletItem(this, physicsWorld, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), 
 	                    									   ItemType.BULLET, resourcesManager.normal_bullet_region,  vbom, false);
-	                    	bullet.shoot();
-	                    	
+	                    	try {
+                                bullet.shoot();
+                            } catch (IOException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
 	                    } else {
 	                        endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
 	                        final float velocityX = endVector.x;
@@ -622,7 +635,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	            {
 	                System.out.println("release item!!");
 	                camera.convertCameraSceneTouchEventToSceneTouchEvent(pSceneTouchEvent);
-	                currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+	                try {
+                        currentDragItem.useAttackItem(physicsWorld,pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+                    } catch (IOException e) {
+                        Debug.e(e);
+                    }
 		        	currentDragItem = null;
 		        	gameHUD.detachChild(dragItem);
 		        	dragItem.dispose();

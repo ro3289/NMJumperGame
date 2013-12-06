@@ -39,11 +39,13 @@ import com.jumpergame.Scene.MultiplayerGameScene;
 import com.jumpergame.connection.client.ConnectionEstablishClientMessage;
 import com.jumpergame.connection.server.AddObjectServerMessage;
 import com.jumpergame.connection.server.AddPlayerServerMessage;
+import com.jumpergame.connection.server.BulletEffectServerMessage;
 import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
 import com.jumpergame.connection.server.ConnectionMainServerMessage;
 import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
+import com.jumpergame.connection.server.UpdateMoneyServerMessage;
 import com.jumpergame.connection.server.UpdateObjectServerMessage;
 import com.jumpergame.connection.server.UpdatePlayerServerMessage;
 import com.jumpergame.connection.server.UpdateScoreServerMessage;
@@ -54,10 +56,10 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
 	private ResourcesManager resourcesManager;
 	private BoundCamera mCamera;
 	
-	private MainServer mServer;
+	public MainServer mServer;
 //	public MainClient mClient;
 	private String mServerIP = LOCALHOST_IP;
-    protected MainServerConnector mServerConnector;
+    public MainServerConnector mServerConnector;
 	
 	@Override
 	public Engine onCreateEngine(EngineOptions pEngineOptions) 
@@ -284,7 +286,7 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
     // Inner and Anonymous Classes
     // ===========================================================
 
-    private class MainServerConnector extends ServerConnector<SocketConnection> implements ConnectionConstants { // TODO S->C protocols
+    public class MainServerConnector extends ServerConnector<SocketConnection> implements ConnectionConstants { // TODO S->C protocols
         // ===========================================================
         // Constants
         // ===========================================================
@@ -296,6 +298,8 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
         // ===========================================================
         // Constructors
         // ===========================================================
+
+        private static final short FLAG_UPDATE_MONEY_SERVER_MESSAGE = 0;
 
         public MainServerConnector(final String pServerIP, final ISocketConnectionServerConnectorListener pSocketConnectionServerConnectorListener) throws IOException {
             super(new SocketConnection(new Socket(pServerIP, SERVER_PORT)), pSocketConnectionServerConnectorListener);
@@ -359,7 +363,7 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
                 @Override
                 public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
                     final UpdateScoreServerMessage updateScoreServerMessage = (UpdateScoreServerMessage) pServerMessage;
-//                    MainActivity.this.updateScore(updateScoreServerMessage.mPlayerID, updateScoreServerMessage.mScore); TODO
+                    ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).updateScore(updateScoreServerMessage.mPlayerID, updateScoreServerMessage.mScore);
                 }
             });
 
@@ -390,7 +394,32 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
 //                    MainActivity.this.updatePlayer(updatePlayerServerMessage.mPlayerID, updatePlayerServerMessage.mX, updatePlayerServerMessage.mY); TODO
                 }
             });
-*/            
+            
+            
+*/          
+            this.registerServerMessage(FLAG_BULLET_EFFECT_SERVER_MESSAGE, BulletEffectServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final BulletEffectServerMessage bulletEffectServerMessage = (BulletEffectServerMessage) pServerMessage;
+                    
+                    final int key = bulletEffectServerMessage.mBulletID;
+                    final String type = bulletEffectServerMessage.mType;
+                    BulletItem bullet = (BulletItem)((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).mBullets.get(key);
+                    
+                }
+            });
+            
+            this.registerServerMessage(FLAG_UPDATE_MONEY_SERVER_MESSAGE, UpdateMoneyServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final UpdateMoneyServerMessage updateMoneyServerMessage = (UpdateMoneyServerMessage) pServerMessage;
+                    
+                    final int key = updateMoneyServerMessage.mPlayerID;
+                    final int money = updateMoneyServerMessage.deltaMoney;
+                    
+                    ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).setMoney(key, money);
+                }
+            });
         }
 
         // ===========================================================

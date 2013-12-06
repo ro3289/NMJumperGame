@@ -1,6 +1,8 @@
 package com.jumpergame;
 
 
+import java.io.IOException;
+
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
@@ -8,9 +10,12 @@ import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.align.HorizontalAlign;
+import org.andengine.util.debug.Debug;
 
+import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Scene.GameScene;
 import com.jumpergame.Scene.MultiplayerGameScene;
+import com.jumpergame.connection.client.PlayerUpdateMoneyClientMessage;
 
 public class StoreItem extends Item {
 	
@@ -56,6 +61,15 @@ public class StoreItem extends Item {
                 plusItem();
             }
     	}
+    	else {
+    	    PlayerUpdateMoneyClientMessage pClientMessage = new PlayerUpdateMoneyClientMessage();
+            pClientMessage.set(((MultiplayerGameScene)gameScene).thisID, -itemPrice);
+            try {
+               ResourcesManager.getInstance().activity.mServerConnector.sendClientMessage(pClientMessage);
+           } catch (IOException e) {
+               Debug.e(e);
+           }
+    	}
     }
     public int getItemAmount()
     {
@@ -80,7 +94,7 @@ public class StoreItem extends Item {
     	}
     }
 
-    public void useAttackItem(PhysicsWorld pw, final float pX, final float pY)
+    public void useAttackItem(PhysicsWorld pw, final float pX, final float pY) throws IOException
     {
         if (!isOnline) {
             switch (itemType)
