@@ -48,6 +48,6 @@ public abstract class BaseScene extends Scene
     public abstract void onBackKeyPressed();
     
     public abstract SceneType getSceneType();
-    
+   
     public abstract void disposeScene();
 }

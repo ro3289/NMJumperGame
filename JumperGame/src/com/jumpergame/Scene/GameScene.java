@@ -291,7 +291,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
         loadLevel(1);
         createInfoHUD();
         camera.setHUD(gameHUD);
-        
+        resourcesManager.mMusic.play();
         setOnSceneTouchListener(this);
         setOnAreaTouchListener(this);
     }
@@ -313,6 +313,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     {
         camera.setHUD(null);
         camera.setCenter(240, 400);
+        resourcesManager.mMusic.pause();
+        resourcesManager.mMenu.play();
 
         // TODO code responsible for disposing scene
         // removing all game scene objects.
@@ -917,4 +919,5 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 		// TODO Auto-generated method stub
 		
 	}
+
 }
