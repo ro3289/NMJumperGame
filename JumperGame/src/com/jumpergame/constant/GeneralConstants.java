@@ -55,13 +55,16 @@ public interface GeneralConstants {
     public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3 = "platform3";
     
     // Stuff
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN        = "coin";
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID        = "acid";
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE        = "glue";
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL        = "tool";
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY      = "energy";
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE   = "invisible";
-    public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE  = "invincible";
+
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN        = "coin";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ACID        = "acid";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_GLUE        = "glue";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_TOOL        = "tool";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_ENERGY      = "energy";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_CROWN  	   = "crown";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVISIBLE   = "invisible";
+    public static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_INVINCIBLE  = "invincible";
+
     
     // Player
     public static final String TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
