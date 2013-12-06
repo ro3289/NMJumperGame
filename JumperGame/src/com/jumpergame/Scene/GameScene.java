@@ -661,13 +661,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     final float angle = (float) Math.atan2( dX, dY);
                     final float rotation = MathUtils.radToDeg(angle);
                     mArrow.setRotation(rotation);
-<<<<<<< HEAD
-                }               
-                else
-=======
+
                 }
                 else if(dragItem != null)
->>>>>>> master
                 {   
                     dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
                 }
