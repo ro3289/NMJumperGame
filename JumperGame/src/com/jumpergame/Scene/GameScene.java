@@ -369,9 +369,11 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 
                 if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
                 {
+
                     levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
 
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyType.StaticBody, STAIR_FIXTURE_DEF);
+
                     body.setUserData(new Sprite_Body(levelObject, "Wall"));
                     
                     ff.add( body.getFixtureList()) ;
@@ -589,7 +591,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
             else if (pSceneTouchEvent.isActionUp()) {
                 if(!jumpState) 
                 {
-                	if(dragItem == null)
+                	if(dragItem == null && initVector != null)
                 	{
 	                    // Eject object
 	                    final float deltaX = initVector.x - pSceneTouchEvent.getX();
@@ -607,7 +609,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
 	                        final Vector2 velocity = Vector2Pool.obtain(velocityFactor * velocityX *0.01f, velocityFactor * velocityY * 0.01f);
 	                        player.returnBody().setLinearVelocity(velocity);
 	                        Vector2Pool.recycle(velocity);
-	                    // Record initial jump position
+	                        initVector = null;
+	                        // Record initial jump position
 	                        initBodyVector = new Vector2(player.returnBody().getPosition().x, player.returnBody().getPosition().y);
 	                        initJumpState = false;
 	                        jumpState 	 = true;
@@ -639,8 +642,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 return true;
             }
             else if(pSceneTouchEvent.isActionMove()) {
-                if(dragItem == null) // Problem here when store items used!!!!!
+                if(dragItem == null && initVector != null) // Problem here when store items used!!!!!
                 {
+                	System.out.print(arrowAttached);
                 	if(!arrowAttached)
                 	{
 	                	activity.runOnUpdateThread(new Runnable() {
@@ -657,8 +661,13 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                     final float angle = (float) Math.atan2( dX, dY);
                     final float rotation = MathUtils.radToDeg(angle);
                     mArrow.setRotation(rotation);
+<<<<<<< HEAD
                 }               
                 else
+=======
+                }
+                else if(dragItem != null)
+>>>>>>> master
                 {   
                     dragItem.setPosition(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
                 }
@@ -902,12 +911,16 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
     }
     private void refreshArrow()
     {
+    	if(arrowAttached)
+    	{
     	 activity.runOnUpdateThread(new Runnable() {
              @Override
              public void run() {
                  gc.detachChild(mArrow);
              }
          });
+    	 arrowAttached = false;
+    	}
 		initJumpState = false;
     }
 	@Override
