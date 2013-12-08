@@ -87,7 +87,8 @@ public class MainMenuScene extends BaseScene implements IOnMenuItemClickListener
         {
         case MENU_PLAY:
 
-        	SceneManager.getInstance().loadGameScene(engine);
+//        	SceneManager.getInstance().loadGameScene(engine);
+            SceneManager.getInstance().loadMultiPlayerScene(engine);
 
         	resourcesManager.mMenu.pause();
 
