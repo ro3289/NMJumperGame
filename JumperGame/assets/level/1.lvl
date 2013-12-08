@@ -110,6 +110,7 @@
     <entity x="123" y="7450" type="coin"/>
     <entity x="358" y="7650" type="coin"/>
     <entity x="100" y="7850250" type="acid"/>
+    <entity x="386" y="7250" type="crown"/>
 </level>
 
 

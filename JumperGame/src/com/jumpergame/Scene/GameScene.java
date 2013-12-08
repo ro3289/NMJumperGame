@@ -594,6 +594,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                 initVector = new Vector2(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
                 // Show Direction
                 mArrow.setPosition(player.getX(), player.getY() +60 );
+                activity.runOnUpdateThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        attachChild(mArrow);
+                    }
+                });
                 arrowAttached = false;
                 initJumpState = true;
             }
