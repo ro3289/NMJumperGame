@@ -61,6 +61,7 @@ import com.jumpergame.MainActivity;
 import com.jumpergame.Player;
 import com.jumpergame.Player_Client;
 import com.jumpergame.StoreItem;
+import com.jumpergame.rankingSprite;
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Manager.SceneManager.SceneType;
@@ -118,6 +119,10 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     public SparseArray<Item> mBullets = new SparseArray<Item>();
     private ArrayList<ArrayList<Fixture>> ff;
     public Rectangle mGround;
+    private boolean arrowAttached = false;
+    private boolean initJumpState = false;
+    
+    private rankingSprite rank;
     
     private void createInfoHUD()
     {
@@ -178,6 +183,10 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                         }                   
                     }
                 }
+                else if (pSceneTouchEvent.isActionUp() && initJumpState)
+                {
+                    refreshArrow();
+                }
                 return true;
             };
                 
@@ -204,6 +213,10 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                             this.useEffectItem();
                         }
                     }
+                }
+                else if (pSceneTouchEvent.isActionUp() && initJumpState)
+                {
+                    refreshArrow();
                 }
                 return true;
             };
@@ -237,6 +250,10 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                         // scale up modifier of button
                         
                     }
+                }
+                else if (pSceneTouchEvent.isActionUp() && initJumpState)
+                {
+                    refreshArrow();
                 }
                 return true;
             };
@@ -275,6 +292,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
         loadLevel(1);
         createInfoHUD();
         camera.setHUD(gameHUD);
+        rank=new rankingSprite(vbom);
         
         setOnSceneTouchListener(this);
         setOnAreaTouchListener(this);
@@ -446,6 +464,11 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                     levelObject = player;
                 }
                 */
+                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_CROWN))
+                {
+                    levelObject = createFloatingItem( x, y, ItemType.CROWN, resourcesManager.crown_region);
+                    levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
+                }
                 else
                 {
                     throw new IllegalArgumentException();
@@ -482,6 +505,10 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                                     Debug.e(e);
                                 }
                                  
+                             }
+                             else if(type == ItemType.CROWN)
+                             {
+//                                 rank.display(gc,camera); TODO
                              }
                              else
                              {
@@ -530,6 +557,8 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                         attachChild(mArrow);
                     }
                 });
+                arrowAttached = true;
+                initJumpState = true;
             }
             
             else if (pSceneTouchEvent.isActionUp()) {
@@ -572,6 +601,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                             Vector2Pool.recycle(velocity);
                         // Record initial jump position
 //                            initBodyVector = new Vector2(getThisPlayer().returnBody().getPosition().x, getThisPlayer().returnBody().getPosition().y);
+                            initJumpState = false;
                         }
                     }
 
@@ -584,16 +614,31 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                     dragItem = null;
                 }
                 // Detach arrow 
-                activity.runOnUpdateThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        detachChild(mArrow);
-                    }
-                });
+                if(arrowAttached)
+                {
+                    activity.runOnUpdateThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            detachChild(mArrow);
+                            arrowAttached = false;
+                        }
+                    });
+                }
             }
             else if(pSceneTouchEvent.isActionMove()) {
                 if(dragItem == null) // Problem here when store items used!!!!!
                 {
+                    System.out.print(arrowAttached);
+                    if(!arrowAttached)
+                    {
+                        activity.runOnUpdateThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                attachChild(mArrow);
+                                arrowAttached = true;
+                            }
+                        });
+                    }
                     endVector = new Vector2(initVector.x - pSceneTouchEvent.getX(), initVector.y - pSceneTouchEvent.getY());
                     final float dX = endVector.x;
                     final float dY = endVector.y;
@@ -631,7 +676,17 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
         AnimatedSprite appearance;
         
         if (thisID == playerID) {
-            appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player1_region, ResourcesManager.getInstance().vbom);
+            appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player1_region, ResourcesManager.getInstance().vbom) {
+                @Override
+                public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+                {
+                  if (pSceneTouchEvent.isActionUp() && initJumpState)
+                    {
+                      refreshArrow();
+                    }
+                    return true;
+                };
+            };
             appearance.animate(new long[]{ 200, 200 }, 0, 1, true);
             registerTouchArea(appearance);
             attachChild(appearance);
@@ -639,7 +694,17 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
             ResourcesManager.getInstance().camera.setChaseEntity(appearance);
         }
         else {
-            appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player2_region, ResourcesManager.getInstance().vbom);
+            appearance = new AnimatedSprite(initX, initY, ResourcesManager.getInstance().player2_region, ResourcesManager.getInstance().vbom){
+                @Override
+                public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float X, float Y) 
+                {
+                  if (pSceneTouchEvent.isActionUp() && initJumpState)
+                    {
+                      refreshArrow();
+                    }
+                    return true;
+                };
+            };
             appearance.animate(new long[]{ 200, 200 }, 0, 1, true);
             registerTouchArea(appearance);
             attachChild(appearance);
@@ -698,6 +763,21 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     public void updateScore(final int userID, final int deltaPoints) {
         final Text score = this.mScoreTextMap.get(userID);
         score.setText("Score: " + String.valueOf(deltaPoints));
+    }
+    
+    private void refreshArrow()
+    {
+        if(arrowAttached)
+        {
+         activity.runOnUpdateThread(new Runnable() {
+             @Override
+             public void run() {
+                 gc.detachChild(mArrow);
+             }
+         });
+         arrowAttached = false;
+        }
+        initJumpState = false;
     }
     
     // ===========================================================
