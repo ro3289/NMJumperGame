@@ -505,7 +505,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                              else if(type == ItemType.CROWN)
                              {
                             	 
-                            	 rank.display(gc,camera);
+                            	 rank.display(gc,camera, false);
                              }
                              else
                              {
@@ -600,7 +600,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener, IOnAr
                         attachChild(mArrow);
                     }
                 });
-                arrowAttached = false;
+                arrowAttached = true;
                 initJumpState = true;
             }
             else if (pSceneTouchEvent.isActionUp()) {

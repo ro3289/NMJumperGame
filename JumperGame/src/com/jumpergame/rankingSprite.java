@@ -13,6 +13,7 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.util.adt.align.HorizontalAlign;
 
 import com.jumpergame.Manager.ResourcesManager;
+import com.jumpergame.Scene.MultiplayerGameScene;
 
 public class rankingSprite extends Sprite{
 	
@@ -31,51 +32,83 @@ public class rankingSprite extends Sprite{
 	 * Change star`s tile index, depends on stars count.
 	 * @param starsCount
 	 */
-	public void display(Scene scene, Camera camera)
+	public void display(Scene scene, Camera camera, boolean isOnline)
 	{
-		// Change stars tile index, based on stars count (1-3)
-		ranking = new ArrayList<users>(ResourcesManager.getInstance().userList.values()); 
-		System.out.println("hahaha"+ResourcesManager.getInstance().userList.size());
-		System.out.println("honhonhon"+ranking.size());
-		Collections.sort(ranking, new Comparator<users>() {
+        int y_init=620;
+        int x_rank=1;
+        int x_pos_rank=40;
+        int x_pos_name=100;
+        int x_pos_score=200;
+        
+	    if (isOnline) {
+	        final MultiplayerGameScene mScene = (MultiplayerGameScene)scene;
+	        ArrayList<Player_Client> mPlayers = mScene.getPlayers();
+	        Collections.sort(mPlayers, new Comparator<Player_Client>() {
 
-			@Override
-			public int compare(users arg0, users arg1) {				
-		            return arg1.getScore() - arg0.getScore();
-			}
-	    });
-		int y_init=620;
-		int x_rank=1;
-		int x_pos_rank=40;
-		int x_pos_name=100;
-		int x_pos_score=200;
-		for (users p : ranking) {
-			System.out.println("can you see me><");
-			float[] coordinates1 = {x_pos_rank, y_init};
-			float[] localCoordinates1 = convertSceneCoordinatesToLocalCoordinates(coordinates1);
-			Text rankText = new Text(localCoordinates1[0],localCoordinates1[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(x_rank), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
-			attachChild(rankText);
-			float[] coordinates2 = {x_pos_name, y_init};
-			float[] localCoordinates2 = convertSceneCoordinatesToLocalCoordinates(coordinates2);
-			Text nameText = new Text(localCoordinates2[0], localCoordinates2[1], ResourcesManager.getInstance().mScoreFont, p.getName(), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
-			attachChild(nameText);
-			float[] coordinates3 = {x_pos_score, y_init};
-			float[] localCoordinates3 = convertSceneCoordinatesToLocalCoordinates(coordinates3);
-			Text scoreText = new Text(localCoordinates3[0], localCoordinates3[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(p.getScore()), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
-			attachChild(scoreText);
-			x_rank++;
-			y_init-=50;
+                @Override
+                public int compare(Player_Client arg0, Player_Client arg1) {                
+                        return arg1.getMoney() - arg0.getMoney();
+                }
+            });	        
+	        
+            for (Player_Client p : mPlayers) {
+                float[] coordinates1 = {x_pos_rank, y_init};
+                float[] localCoordinates1 = convertSceneCoordinatesToLocalCoordinates(coordinates1);
+                Text rankText = new Text(localCoordinates1[0],localCoordinates1[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(x_rank), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+                attachChild(rankText);
+                float[] coordinates2 = {x_pos_name, y_init};
+                float[] localCoordinates2 = convertSceneCoordinatesToLocalCoordinates(coordinates2);
+                Text nameText = new Text(localCoordinates2[0], localCoordinates2[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(p.getID()), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+                attachChild(nameText);
+                float[] coordinates3 = {x_pos_score, y_init};
+                float[] localCoordinates3 = convertSceneCoordinatesToLocalCoordinates(coordinates3);
+                Text scoreText = new Text(localCoordinates3[0], localCoordinates3[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(p.getMoney()), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+                attachChild(scoreText);
+                x_rank++;
+                y_init-=50;
+            }
+            
+	    } else {
+	        // Change stars tile index, based on stars count (1-3)
+	        ranking = new ArrayList<users>(ResourcesManager.getInstance().userList.values()); 
+	        System.out.println("hahaha"+ResourcesManager.getInstance().userList.size());
+	        System.out.println("honhonhon"+ranking.size());
+	        Collections.sort(ranking, new Comparator<users>() {
+
+	            @Override
+	            public int compare(users arg0, users arg1) {                
+	                    return arg1.getScore() - arg0.getScore();
+	            }
+	        });
+
+	        for (users p : ranking) {
+	            System.out.println("can you see me><");
+	            float[] coordinates1 = {x_pos_rank, y_init};
+	            float[] localCoordinates1 = convertSceneCoordinatesToLocalCoordinates(coordinates1);
+	            Text rankText = new Text(localCoordinates1[0],localCoordinates1[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(x_rank), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+	            attachChild(rankText);
+	            float[] coordinates2 = {x_pos_name, y_init};
+	            float[] localCoordinates2 = convertSceneCoordinatesToLocalCoordinates(coordinates2);
+	            Text nameText = new Text(localCoordinates2[0], localCoordinates2[1], ResourcesManager.getInstance().mScoreFont, p.getName(), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+	            attachChild(nameText);
+	            float[] coordinates3 = {x_pos_score, y_init};
+	            float[] localCoordinates3 = convertSceneCoordinatesToLocalCoordinates(coordinates3);
+	            Text scoreText = new Text(localCoordinates3[0], localCoordinates3[1], ResourcesManager.getInstance().mScoreFont, String.valueOf(p.getScore()), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+	            attachChild(scoreText);
+	            x_rank++;
+	            y_init-=50;
+	        }
 	    }
-		
-		// Hide HUD
-		camera.getHUD().setVisible(false);
-		
-		// Disable camera chase entity
-		camera.setChaseEntity(null);
-		
-		// Attach our level complete panel in the middle of camera
-		setPosition(camera.getCenterX(), camera.getCenterY());
-		scene.attachChild(this);
+	    
+        // Hide HUD
+        camera.getHUD().setVisible(false);
+        
+        // Disable camera chase entity
+        camera.setChaseEntity(null);
+        
+        // Attach our level complete panel in the middle of camera
+        setPosition(camera.getCenterX(), camera.getCenterY());
+        scene.attachChild(this);
 	}
 
 }

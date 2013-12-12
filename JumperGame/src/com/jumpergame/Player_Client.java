@@ -16,7 +16,7 @@ public class Player_Client implements GeneralConstants {
     // ===========================================================
     
 //    private String IP;
-    private int ID; // id recorded in MainServer 
+    private int ID; // id recorded in MainServer;
 //    private int score;
 //    private int energy;
 //    private int bulletNum;
@@ -25,6 +25,7 @@ public class Player_Client implements GeneralConstants {
 //    private Body body;
     private Rectangle energyBar;
     private Text moneyText;
+    private int money = 0;
     
     // ===========================================================
     // Constructors
@@ -33,6 +34,8 @@ public class Player_Client implements GeneralConstants {
     public Player_Client(AnimatedSprite as, int id) {
         setID(id);
         setAppearance(as);
+        
+        money = 0;
 //        ID = id;
 //        appearance = aSprite;
 //        energyBar = eBar;
@@ -72,8 +75,9 @@ public class Player_Client implements GeneralConstants {
         energyBar = eBar;
     }
     
-    public void setMoney(int money) {
-        moneyText.setText(String.valueOf(money));
+    public void setMoney(int m) {
+//        moneyText.setText(String.valueOf(money));
+        money = m;
     }
     
     public void setMoneyText(Text t) {
@@ -86,5 +90,9 @@ public class Player_Client implements GeneralConstants {
     
     public void setPos(final float x, final float y) {
         appearance.setPosition(x, y);
+    }
+
+    public int getMoney() {
+        return money;
     }
 }
