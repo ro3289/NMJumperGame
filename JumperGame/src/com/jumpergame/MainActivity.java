@@ -44,6 +44,7 @@ import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
 import com.jumpergame.connection.server.ConnectionMainServerMessage;
 import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
+import com.jumpergame.connection.server.GameEndServerMessage;
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
 import com.jumpergame.connection.server.UpdateMoneyServerMessage;
 import com.jumpergame.connection.server.UpdateObjectServerMessage;
@@ -299,8 +300,6 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
         // Constructors
         // ===========================================================
 
-        private static final short FLAG_UPDATE_MONEY_SERVER_MESSAGE = 0;
-
         public MainServerConnector(final String pServerIP, final ISocketConnectionServerConnectorListener pSocketConnectionServerConnectorListener) throws IOException {
             super(new SocketConnection(new Socket(pServerIP, SERVER_PORT)), pSocketConnectionServerConnectorListener);
 
@@ -409,7 +408,7 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
                 }
             });
             
-            this.registerServerMessage(FLAG_UPDATE_MONEY_SERVER_MESSAGE, UpdateMoneyServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_UPDATE_MONEY, UpdateMoneyServerMessage.class, new IServerMessageHandler<SocketConnection>() {
                 @Override
                 public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
                     final UpdateMoneyServerMessage updateMoneyServerMessage = (UpdateMoneyServerMessage) pServerMessage;
@@ -417,7 +416,18 @@ public class MainActivity extends BaseGameActivity implements GeneralConstants, 
                     final int key = updateMoneyServerMessage.mPlayerID;
                     final int money = updateMoneyServerMessage.deltaMoney;
                     
+                    System.out.println("update money... id = " + key + ", money = " + money);
+                    
                     ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).setMoney(key, money);
+                }
+            });
+            
+            this.registerServerMessage(FLAG_MESSAGE_SERVER_GAME_END, GameEndServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+                @Override
+                public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+                    final GameEndServerMessage gameEndServerMessage = (GameEndServerMessage) pServerMessage;
+                    
+                    ((MultiplayerGameScene) SceneManager.getInstance().multiplayerScene).gameEnd();
                 }
             });
         }

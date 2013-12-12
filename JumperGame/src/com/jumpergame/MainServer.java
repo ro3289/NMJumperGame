@@ -9,7 +9,6 @@ import org.andengine.entity.IEntity;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
-import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
@@ -44,7 +43,6 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.jumpergame.Manager.ResourcesManager;
 import com.jumpergame.Manager.SceneManager;
 import com.jumpergame.Scene.MultiplayerGameScene;
-import com.jumpergame.body.Sprite_Body;
 import com.jumpergame.connection.client.ConnectionCloseClientMessage;
 import com.jumpergame.connection.client.ConnectionEstablishClientMessage;
 import com.jumpergame.connection.client.ConnectionPingClientMessage;
@@ -52,6 +50,7 @@ import com.jumpergame.connection.client.PlayerJumpClientMessage;
 import com.jumpergame.connection.client.PlayerShootClientMessage;
 import com.jumpergame.connection.client.PlayerUpdateMoneyClientMessage;
 import com.jumpergame.connection.client.PlayerUseItemClientMessage;
+import com.jumpergame.connection.client.PlayerWinClientMessage;
 import com.jumpergame.connection.server.AddObjectServerMessage;
 import com.jumpergame.connection.server.AddPlayerServerMessage;
 import com.jumpergame.connection.server.BulletEffectServerMessage;
@@ -59,9 +58,9 @@ import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.connection.server.ConnectionEstablishedServerMessage;
 import com.jumpergame.connection.server.ConnectionMainServerMessage;
 import com.jumpergame.connection.server.ConnectionRejectedProtocolMissmatchServerMessage;
+import com.jumpergame.connection.server.GameEndServerMessage;
 import com.jumpergame.connection.server.RemoveObjectServerMessage;
 import com.jumpergame.connection.server.UpdateMoneyServerMessage;
-import com.jumpergame.connection.server.UpdateObjectServerMessage;
 import com.jumpergame.connection.server.UpdatePlayerServerMessage;
 import com.jumpergame.connection.server.UpdateScoreServerMessage;
 import com.jumpergame.constant.ConnectionConstants;
@@ -83,6 +82,7 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
     
     private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
     private final ArrayList<UpdatePlayerServerMessage> mUpdatePlayerServerMessages = new ArrayList<UpdatePlayerServerMessage>();
+    private final ArrayList<UpdateMoneyServerMessage> mUpdateMoneyServerMessages = new ArrayList<UpdateMoneyServerMessage>();
     
     private final PhysicsWorld mPhysicsWorld;
     private MainActivity mMainActivity;
@@ -92,6 +92,8 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
     private final SparseArray<Body> mBodies = new SparseArray<Body>();
     private ArrayList<ArrayList<Fixture>> mStairFixtures;
     private final HashMap<String, Integer> IP_PlayerID = new HashMap<String, Integer>();
+    
+    private boolean isEnd = false;
     
     // ===========================================================
     // Constructors
@@ -115,11 +117,13 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
 //        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ADD_PLAYER, UpdatePlayerServerMessage.class);
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_SCORE, UpdateScoreServerMessage.class);
+        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_MONEY, UpdateMoneyServerMessage.class);
 //        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_BULLET, UpdateBulletServerMessage.class);
 //        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER, UpdatePlayerServerMessage.class);
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ADD_OBJ, AddObjectServerMessage.class);
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER, UpdatePlayerServerMessage.class);
         mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_REMOVE_OBJ, RemoveObjectServerMessage.class);
+        mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_END, GameEndServerMessage.class);
     }
     
     private void initPhysics() {
@@ -307,24 +311,33 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         ArrayList<UpdatePlayerServerMessage> updatePlayerServerMessages = mUpdatePlayerServerMessages;
 //        System.out.println("Player Num = " + updatePlayerServerMessages.size());
         
+        /* Prepare UpdateMoneyServerMessage. */
+        ArrayList<UpdateMoneyServerMessage> updateMoneyServerMessages = mUpdateMoneyServerMessages;
+        
         for(int j = 0; j < players.size(); j++) {
             final int key = players.keyAt(j);
-//            System.out.println("key = " + key);
             final Player_Server player = players.get(key); 
             final Body playerBody = player.getBody();
             final Vector2 playerPosition = playerBody.getPosition();
-
+            
+            /* Player */
             final float playerX = playerPosition.x * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - ResourcesManager.getInstance().player_region.getWidth()/2;  //PADDLE_WIDTH_HALF;
             final float playerY = playerPosition.y * PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;// - ResourcesManager.getInstance().player_region.getHeight()/2;//PADDLE_HEIGHT_HALF;
             
-            if (player.getJumpState())
-                System.out.println("update player, x = " + playerX + ", y = " + playerY+", jState = "+player.getJumpState());
+//            if (player.getJumpState())
+//                System.out.println("update player, x = " + playerX + ", y = " + playerY+", jState = "+player.getJumpState());
 
             final UpdatePlayerServerMessage updatePlayerServerMessage = (UpdatePlayerServerMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_UPDATE_PLAYER);
             updatePlayerServerMessage.set(player.getPlayerID(), playerX, playerY);
-
             updatePlayerServerMessages.add(updatePlayerServerMessage);
+            
+            /* Money */
+            final UpdateMoneyServerMessage updateMoneyServerMessage = (UpdateMoneyServerMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_UPDATE_MONEY);
+            updateMoneyServerMessage.set(player.getPlayerID(), player.getMoney());
+            updateMoneyServerMessages.add(updateMoneyServerMessage);
         }
+        
+        final GameEndServerMessage gameEndServerMessage = (GameEndServerMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_GAME_END);
         
         try {
 
@@ -333,16 +346,28 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
 //                System.out.println("update player XDDDDDDDDDDDDDDDD... size = " + updatePlayerServerMessages.size());
                 sendBroadcastServerMessage(updatePlayerServerMessages.get(j));
             }
+            
+            /* Update Money */
+            for(int j = 0; j < updateMoneyServerMessages.size(); ++j) {
+//              System.out.println("update player XDDDDDDDDDDDDDDDD... size = " + updatePlayerServerMessages.size());
+                sendBroadcastServerMessage(updateMoneyServerMessages.get(j));
+            }
+            
+            if (isEnd) {
+                sendBroadcastServerMessage(gameEndServerMessage);
+            }
         } catch (final IOException e) {
             Debug.e(e);
         }
         
         /* Recycle messages. */
 //        mMessagePool.recycleMessages(updateBulletServerMessages);
+        mMessagePool.recycleMessages(updateMoneyServerMessages);
         mMessagePool.recycleMessages(updatePlayerServerMessages);
+        mMessagePool.recycleMessage(gameEndServerMessage);
 //        updateBulletServerMessages.clear();
         updatePlayerServerMessages.clear();
-
+        updateMoneyServerMessages.clear();
     }
 
     @Override
@@ -461,17 +486,36 @@ public class MainServer extends SocketServer<SocketConnectionClientConnector> im
         clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_UPDATE_MONEY, PlayerUpdateMoneyClientMessage.class, new IClientMessageHandler<SocketConnection>() {
             @Override
             public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
+                System.out.println("money received!!");
+                
                 final PlayerUpdateMoneyClientMessage playerUpdateMoneyClientMessage = (PlayerUpdateMoneyClientMessage) pClientMessage;
                 final int id = playerUpdateMoneyClientMessage.mPlayerID;
                 final int deltaMoney = playerUpdateMoneyClientMessage.deltaMoney;
+                
                 Player_Server p = mPlayerBodies.get(id);
-                
                 p.setMoney(deltaMoney + p.getMoney());
-                final int newMoney = p.getMoney();
+//                final int newMoney = p.getMoney();
                 
-                sendBroadcastServerMessage(new UpdateMoneyServerMessage(id, newMoney));
+//                sendBroadcastServerMessage(new UpdateMoneyServerMessage(id, newMoney));
             }
         });
+        
+        clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_WIN, PlayerWinClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+            @Override
+            public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
+                System.out.println("crown received!!");
+                
+                final PlayerWinClientMessage playerWinClientMessage = (PlayerWinClientMessage) pClientMessage;
+                final int id = playerWinClientMessage.mPlayerID;             
+                
+                Player_Server p = mPlayerBodies.get(id);
+                p.setMoney(10000 + p.getMoney());
+                
+                isEnd = true;
+            }
+        });
+        
+        
         
         return clientConnector;
     }

@@ -28,10 +28,6 @@ public class UpdateMoneyServerMessage extends ServerMessage implements Connectio
 
     }
 
-    public UpdateMoneyServerMessage(final int pPlayerID, final int del) {
-        set(pPlayerID, del);
-    }
-
     // ===========================================================
     // Getter & Setter
     // ===========================================================

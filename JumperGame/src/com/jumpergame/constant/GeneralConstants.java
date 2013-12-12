@@ -82,9 +82,9 @@ public interface GeneralConstants {
 
     /* And what should collide with what. */
     public static final short MASKBITS_WALL = CATEGORYBIT_WALL + CATEGORYBIT_PLAYER + CATEGORYBIT_BULLET;
-    public static final short MASKBITS_PLAYER = CATEGORYBIT_WALL + CATEGORYBIT_STAIR;
-    public static final short MASKBITS_PLAYER_IGNORE_LADDER = CATEGORYBIT_WALL;
-    public static final short MASKBITS_BULLET = CATEGORYBIT_WALL + CATEGORYBIT_STAIR;
+    public static final short MASKBITS_PLAYER = CATEGORYBIT_WALL + CATEGORYBIT_STAIR + CATEGORYBIT_BULLET;
+    public static final short MASKBITS_PLAYER_IGNORE_LADDER = CATEGORYBIT_WALL + CATEGORYBIT_BULLET;
+    public static final short MASKBITS_BULLET = CATEGORYBIT_WALL + CATEGORYBIT_STAIR + CATEGORYBIT_PLAYER;
     
     public static final FixtureDef WALL_FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.5f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);
     public static final FixtureDef GROUND_FIXTURE_DEF = PhysicsFactory.createFixtureDef(2, 0f, 0.5f, false, CATEGORYBIT_WALL, MASKBITS_WALL, (short)0);

@@ -60,6 +60,7 @@ import com.jumpergame.Item.ItemType;
 import com.jumpergame.MainActivity;
 import com.jumpergame.Player;
 import com.jumpergame.Player_Client;
+import com.jumpergame.Player_Server;
 import com.jumpergame.StoreItem;
 import com.jumpergame.rankingSprite;
 import com.jumpergame.Manager.ResourcesManager;
@@ -69,6 +70,7 @@ import com.jumpergame.body.Sprite_Body;
 import com.jumpergame.connection.client.PlayerJumpClientMessage;
 import com.jumpergame.connection.client.PlayerShootClientMessage;
 import com.jumpergame.connection.client.PlayerUpdateMoneyClientMessage;
+import com.jumpergame.connection.client.PlayerWinClientMessage;
 import com.jumpergame.connection.server.ConnectionCloseServerMessage;
 import com.jumpergame.constant.GeneralConstants;
 
@@ -104,6 +106,8 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
 //    private float mGravityX = 0;
 //    private float mGravityY = -10.0f;
     
+    private int textInitY = 720;
+    
     public int money = 0;
 
     // Item
@@ -127,6 +131,7 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     private void createInfoHUD()
     {
         mScoreTextMap = new SparseArray<Text>();
+        mMoneyTextMap = new SparseArray<Text>();
 
         // Set Score 
         /**
@@ -500,15 +505,22 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
                                  PlayerUpdateMoneyClientMessage pClientMessage = new PlayerUpdateMoneyClientMessage();
                                  pClientMessage.set(thisID, 500);
                                  try {
-                                    ResourcesManager.getInstance().activity.mServerConnector.sendClientMessage(pClientMessage);
-                                } catch (IOException e) {
-                                    Debug.e(e);
-                                }
+                                     System.out.println("money sent!!");
+                                     ResourcesManager.getInstance().activity.mServerConnector.sendClientMessage(pClientMessage);
+                                 } catch (IOException e) {
+                                     Debug.e(e);
+                                 }
                                  
                              }
                              else if(type == ItemType.CROWN)
                              {
-//                                 rank.display(gc,camera); TODO
+                                 PlayerWinClientMessage pClientMessage = new PlayerWinClientMessage();
+                                 try {
+                                     System.out.println("crown sent!!");
+                                     ResourcesManager.getInstance().activity.mServerConnector.sendClientMessage(pClientMessage);
+                                 } catch (IOException e) {
+                                     Debug.e(e);
+                                 }
                              }
                              else
                              {
@@ -712,15 +724,17 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
         
         mPlayers.append(playerID, new Player_Client(appearance, playerID));
         
-        Text thisScoreText = new Text(20, 720, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
-        thisScoreText.setAnchorCenter(0, 0); 
-        gameHUD.attachChild(thisScoreText);
-        mScoreTextMap.put(thisID, thisScoreText);
+//        Text thisScoreText = new Text(20, textInitY, resourcesManager.mScoreFont, "Score: 0", 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+//        thisScoreText.setAnchorCenter(0, 0); 
+//        gameHUD.attachChild(thisScoreText);
+//        mScoreTextMap.put(thisID, thisScoreText);
         // Set Money
-        Text thisMoneyText = new Text(250, 720, resourcesManager.mScoreFont, "Money: 0", 20, new TextOptions(HorizontalAlign.RIGHT), vbom);
-        thisMoneyText.setAnchorCenter(0, 0);
-        gameHUD.attachChild(thisMoneyText);
-        mMoneyTextMap.put(thisID, thisMoneyText);
+//        Text thisMoneyText = new Text(20, textInitY-50, resourcesManager.mScoreFont, "Money: 0", 20, new TextOptions(HorizontalAlign.RIGHT), vbom);
+//        thisMoneyText.setAnchorCenter(0, 0);
+//        gameHUD.attachChild(thisMoneyText);
+//        mMoneyTextMap.put(thisID, thisMoneyText);
+        
+//        textInitY -= 50;
     }
     
     private void addObject(final int mObjectId, final String mTextureName, final float initX, final float initY) { // TODO maybe we don't need it XD 
@@ -886,7 +900,19 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
     */
     
     public void setMoney(final int pID, final int newMoney) {
-        mMoneyTextMap.get(pID).setText("Money: "+ String.valueOf(newMoney));
+//        mMoneyTextMap.get(pID).setText("Money: "+ String.valueOf(newMoney));
+        if (mScoreTextMap.get(pID) != null) {
+            mScoreTextMap.get(pID).setText("Player " + pID + " Score: "+ String.valueOf(newMoney));
+            mPlayers.get(pID).setMoney(newMoney);
+        }
+        else {
+            Text thisScoreText = new Text(20, textInitY, resourcesManager.mScoreFont, "Player " + pID + "Score: "+ String.valueOf(newMoney), 50, new TextOptions(HorizontalAlign.LEFT), vbom);
+            thisScoreText.setAnchorCenter(0, 0); 
+            gameHUD.attachChild(thisScoreText);
+            mScoreTextMap.put(pID, thisScoreText);
+            
+            textInitY -= 50;
+        }
     }
     
     /*
@@ -933,9 +959,23 @@ public class MultiplayerGameScene extends BaseScene implements IOnSceneTouchList
         try {
             mPlayers.get(mPlayerID).getAppearance().setPosition(mX, mY);
         } catch (NullPointerException e) {
-            
+            Debug.e(e);
         }
     }
+    public void gameEnd() {
+        rank = new rankingSprite(vbom);
+        rank.display(gc,camera,true);
+    }
     
-    
+    public ArrayList<Player_Client> getPlayers() {
+        ArrayList<Player_Client> players = new ArrayList<Player_Client>();
+        
+        for(int j = 0; j < mPlayers.size(); j++) {
+            final int key = mPlayers.keyAt(j);
+            final Player_Client player = mPlayers.get(key);
+            players.add(player);
+        }
+        
+        return players;
+    }
 }
